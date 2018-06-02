@@ -23,7 +23,11 @@ $("#fecha_recibo").daterangepicker({
 }, function (a, b, c) {
     console.log(a.toISOString(), b.toISOString(), c)
 });
-
+$('in_cliente').on('change',async function(){
+    let pet=await fetch(`http://localhost:3000/proveedor/${$(this).val()}`);
+    let data = await pet.json();
+    console.log(data);
+});
 $('#agregarRecibo').on('click', function () {
     let data = $('#form1').serializeObject();
     let cliente = $('#in_cliente option:selected').text();
