@@ -23,7 +23,7 @@ var validator = (function($){
         number_min      : 'too low',
         number_max      : 'too high',
         url             : 'invalid URL',
-        number          : 'not a number',
+        number          : 'no es un número',
         email           : 'email address is invalid',
         email_repeat    : 'emails do not match',
         password_repeat : 'passwords do not match',

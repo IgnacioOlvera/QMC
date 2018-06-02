@@ -25,7 +25,6 @@
     <link href="../vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css" rel="stylesheet">
     <link href="../vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css" rel="stylesheet">
     <link href="../vendors/datatables.net/jquery-datatable-styles.css" rel="stylesheet">
-
     <!-- bootstrap-daterangepicker -->
     <link href="../vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
 
@@ -109,84 +108,85 @@
                                 <div class="x_content">
 
                                     <form id="form1" class="form-horizontal form-label-left" novalidate>
-                                        <fieldset>
-                                            <div class="item form-group">
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">
-                                                    Cliente
-                                                    <span class="required">*</span>
-                                                </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <select name="id_proveedor" id="in_cliente" class="form-control col-md-7 col-xs-12"></select>
+                                        <div class="item form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">
+                                                Cliente
+                                                <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <select name="id_proveedor" id="in_cliente" class="form-control col-md-7 col-xs-12"></select>
+                                            </div>
+                                        </div>
+                                        <div class="item form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="parte">Número de Parte
+                                                <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <select id="in_parte" name="id_parte" class="form-control col-md-7 col-xs-12"></select>
+                                            </div>
+                                        </div>
+                                        <div class="item form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="cantidad">Cantidad
+                                                <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input type="text" placeholder="Cantidad..." id="in_cantidad" name="cant_parte" data-validate-linked="number" required class="form-control col-md-7 col-xs-12">
+                                            </div>
+                                        </div>
+                                        <div class="item form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">Fecha de Ingreso
+                                                <span class="required">*</span>
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="xdisplay_inputx has-feedback">
+                                                    <input type=text name='fecha' placeholder="Fecha de Ingreso" class="form-control has-feedback-left" id="fecha_recibo" aria-describedby="inputSuccess2Status">
+                                                    <span class="fa fa-calendar-o form-control-feedback left" aria-hidden="true"></span>
                                                 </div>
                                             </div>
-                                            <div class="item form-group">
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="parte">Número de Parte
-                                                    <span class="required">*</span>
-                                                </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <select id="in_parte" name="id_parte" class="form-control col-md-7 col-xs-12"></select>
-                                                </div>
+                                        </div>
+                                        <div class="item form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="contenedor">Contenedor
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input type="text" id="id_contenedor" name="id_contenedor" placeholder="ID de Contenedor" class="form-control col-md-7 col-xs-12">
                                             </div>
-                                            <div class="item form-group">
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="cantidad">Cantidad
-                                                    <span class="required">*</span>
-                                                </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <input type="text" placeholder="Cantidad..." id="in_cantidad" name="cant_parte" data-validate-linked="number" required class="form-control col-md-7 col-xs-12">
-                                                </div>
+                                        </div>
+                                        <div class="item form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="candado">Candado
+                                            </label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input id="candado" type="text" placeholder="ID de Candado" name="id_candado" data-validate-length-range="5,20" class="form-control col-md-7 col-xs-12">
                                             </div>
-                                            <div class="item form-group">
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">Fecha de Ingreso
-                                                    <span class="required">*</span>
-                                                </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <div class="xdisplay_inputx has-feedback">
-                                                        <input type=text name='fecha' placeholder="Fecha de Ingreso" class="form-control has-feedback-left" id="fecha_recibo" aria-describedby="inputSuccess2Status">
-                                                        <span class="fa fa-calendar-o form-control-feedback left" aria-hidden="true"></span>
-                                                    </div>
-                                                </div>
+                                        </div>
+                                        <div class="item form-group">
+                                            <label for="secuencia" class="control-label col-md-3">Secuencia</label>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <input id="secuencia" type="text" placeholder="Secuencia de Costal" name="secuencia" data-validate-length="10" class="form-control col-md-7 col-xs-12">
                                             </div>
-                                            <div class="item form-group">
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="contenedor">Contenedor
-                                                </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <input type="text" id="id_contenedor" name="id_contenedor" placeholder="ID de Contenedor" class="form-control col-md-7 col-xs-12">
-                                                </div>
-                                            </div>
-                                            <div class="item form-group">
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="candado">Candado
-                                                </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <input id="candado" type="text" placeholder="ID de Candado" name="id_candado" data-validate-length-range="5,20" class="form-control col-md-7 col-xs-12">
-                                                </div>
-                                            </div>
-                                            <div class="item form-group">
-                                                <label for="secuencia" class="control-label col-md-3">Secuencia</label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                    <input id="secuencia" type="text" placeholder="Secuencia de Costal" name="secuencia" data-validate-length="10" class="form-control col-md-7 col-xs-12">
-                                                </div>
-                                            </div>
-                                            <div class="ln_solid"></div>
-                                            <div class="form-group">
-                                                <div class="col-md-6 col-md-offset-3">
-                                                    <button id="agregarRecibo" type="submit" class="btn btn-danger">Agregar</button>
-                                                    <button type="reset" class="btn btn-primary">Limpiar</button>
+                                        </div>
+                                        <div class="ln_solid"></div>
+                                        <div class="form-group">
+                                            <div class="col-md-6 col-md-offset-3">
+                                                <button id="agregarRecibo" type="submit" class="btn btn-danger">Agregar</button>
+                                                <button type="reset" class="btn btn-primary">Limpiar</button>
 
-                                                </div>
                                             </div>
-                                        </fieldset>
+                                        </div>
                                     </form>
                                     <table id="piezasRecibo" class="table table-striped table-bordered">
                                         <thead>
                                             <tr>
-                                                <th>Cliente</th>
+                                                <th>Interior</th>
+                                                <th>Exterior</th>
+                                                <th>Descripción</th>
+                                                <!-- <th>Cliente</th>
                                                 <th>Parte</th>
                                                 <th>Cantidad</th>
                                                 <th>Fecha de Ingreso</th>
                                                 <th>Contenedor</th>
                                                 <th>Candado</th>
                                                 <th>Secuencia</th>
-                                                <th>Acciones</th>
+                                                <th>Acciones</th> -->
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -209,7 +209,7 @@
                 </div>
             </div>
             <!-- /page content -->
-
+            
             <!-- footer content -->
             <footer>
                 <div class="pull-right">

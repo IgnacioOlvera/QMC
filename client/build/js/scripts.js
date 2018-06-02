@@ -14,20 +14,22 @@ async function init() {
     partes.forEach(parte => {
         $('#in_parte').append(`<option value='${parte.id_parte}'>${parte.no_parte}-${parte.descripcion}</option>`);
     })
-
 }
-$("#piezasRecibo").DataTable();
 $("#fecha_recibo").daterangepicker({
     singleDatePicker: !0,
     singleClasses: "picker_4"
 }, function (a, b, c) {
     console.log(a.toISOString(), b.toISOString(), c)
 });
-$('in_cliente').on('change',async function(){
-    let pet=await fetch(`http://localhost:3000/proveedor/${$(this).val()}`);
-    let data = await pet.json();
-    console.log(data);
+
+$('#in_cliente').on('change',async function(){
+    let pet=await  fetch('http://localhost:3000/proveedor/'+$(this).val());
+    let partes=await pet.json();
+    partes.forEach(parte=>{
+        t.row.add([parte.interior,parte.exterior,parte.descripcion]).draw(false);
+    });
 });
+
 $('#agregarRecibo').on('click', function () {
     let data = $('#form1').serializeObject();
     let cliente = $('#in_cliente option:selected').text();
