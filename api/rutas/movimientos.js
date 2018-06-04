@@ -3,7 +3,7 @@ var express = require('express');
 var api = express.Router();
 //Regresa historial de movimientos
 api.get('/movimientos', function (req, res) {
-    let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.id_parte = p.id_parte order by fecha;`;
+    let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
         else res.send(rows);
@@ -11,7 +11,7 @@ api.get('/movimientos', function (req, res) {
 });
 //Regresa hostorial de Entradas
 api.get('/entradas', function (req, res) {
-    let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino) destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.id_parte = p.id_parte and m.id_destino is null order by fecha;`;
+    let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino) destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is null order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
         else res.send(rows);
@@ -19,7 +19,7 @@ api.get('/entradas', function (req, res) {
 });
 //Regresa Historial de Salidas
 api.get('/salidas', function (req, res) {
-    let sql = `select m.*, a.nombre 1almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)   destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.id_parte = p.id_parte and m.id_destino is not null order by fecha;`
+    let sql = `select m.*, a.nombre 1almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)   destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is not null order by fecha;`
     con.query(sql, function (err, rows) {
         if (err) throw err
         else res.send(rows);
@@ -30,18 +30,13 @@ api.get('/salidas', function (req, res) {
 api.post('/entradas', function (req, res) {
     let entrada = req.body;
     let
-        //id_movimiento = entrada.id_movimiento || null,
-        //almacen = entrada.id_almacen || null,
         proveedor = entrada.id_proveedor || null,
-        //destino = entrada.id_destino || null,
         parte = entrada.id_parte || null,
         cantidad = entrada.cant_parte || null,
-        fecha = entrada.fecha || null,
-        //servicio = entrada.id_servicio || null,
-        contenedor = entrada.id_contenedor || null,
-        candado = entrada.id_candado || null,
+        fecha = entrada.fecha || null,    
+        contenedor = `'${entrada.id_contenedor}'` || null,
+        candado = `'${entrada.id_candado}'` || null,
         secuencia = entrada.secuencia || null;
-        console.log(entrada);
     if (entrada != null) {
         if (proveedor != null && parte != null && cantidad != null && fecha != null && cantidad > 0) {
             if (secuencia != null) {
@@ -49,7 +44,7 @@ api.post('/entradas', function (req, res) {
                 con.query(sql, function (err) {
                     if (err) throw err
                     else {
-                        sql = `insert into costales (select id_movimiento, fecha,id_parte,secuencia from movimientos_almacenes where secuencia is not null and secuencia='${secuencia}' and id_destino is null);`;
+                        sql = `insert into costales (select id_movimiento, fecha,no_parte,secuencia from movimientos_almacenes where secuencia is not null and secuencia='${secuencia}' and id_destino is null);`;
                         con.query(sql, function (err) {
                             if (err) throw err
                             else res.send({ message: `Costal ${secuencia} Registrado Correctamente` });
@@ -57,11 +52,12 @@ api.post('/entradas', function (req, res) {
                     }
                 });
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),null,'${contenedor}','${candado}',null)`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),null,${contenedor},${candado},null)`;
                 con.query(sql, function (err) {
                     if (err) throw err
                     else {
-                        sql = `update partes set existencia=existencia+${cantidad} where id_parte=${parte};`;
+                        console.log(parte);
+                        sql = `update partes set existencia=existencia+${cantidad} where no_parte=${parte};`;
                         con.query(sql, function (err) {
                             if (err) throw err
                             else res.send({ message: 'Entrada Registrada Correctamente' });
@@ -111,7 +107,7 @@ api.get('/salidas', function (req, res) {
                 con.query(sql, function (err) {
                     if (err) throw err
                     else {
-                        sql = `update partes set existencia=existencia-${cantidad} where id_parte=${parte};`;
+                        sql = `update partes set existencia=existencia-${cantidad} where no_parte=${parte};`;
                         con.query(sql, function (err) {
                             if (err) throw err
                             else res.send({ message: 'Salida Registrada Correctamente' });
@@ -162,7 +158,7 @@ api.post('movimientos/:id/:a', function (req, res) {
                             }
                         });
                     } else if (a == 1) {//editar movimiento de costales y de movimientos
-                        let sql = `update movimientos set id_almacén=${almacen},id_proveedor=${proveedor},id_destino=${destino},id_parte=${parte},cant_parte=${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),id_servicio=${servicio},id_contendor='${contenedor}',id_candado='${candado}',secuencia='${secuencia}')`;
+                        let sql = `update movimientos set id_almacén=${almacen},id_proveedor=${proveedor},id_destino=${destino},no_parte=${parte},cant_parte=${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),id_servicio=${servicio},id_contendor='${contenedor}',id_candado='${candado}',secuencia='${secuencia}')`;
                         con.query(sql, function (err) {
                             if (err) throw err
                             else {
