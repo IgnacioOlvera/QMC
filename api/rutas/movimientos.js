@@ -34,17 +34,17 @@ api.post('/entradas', function (req, res) {
         parte = entrada.id_parte || null,
         cantidad = entrada.cant_parte || null,
         fecha = entrada.fecha || null,    
-        contenedor = `'${entrada.id_contenedor}'` || null,
-        candado = `'${entrada.id_candado}'` || null,
+        contenedor = `${entrada.id_contenedor}` || null,
+        candado = `${entrada.id_candado}` || null,
         secuencia = entrada.secuencia || null;
     if (entrada != null) {
         if (proveedor != null && parte != null && cantidad != null && fecha != null && cantidad > 0) {
             if (secuencia != null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),null,'${contenedor}','${candado}','${secuencia}')`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),null,${contenedor},${candado},'${secuencia}')`;
                 con.query(sql, function (err) {
                     if (err) throw err
                     else {
-                        sql = `insert into costales (select id_movimiento, fecha,no_parte,secuencia from movimientos_almacenes where secuencia is not null and secuencia='${secuencia}' and id_destino is null);`;
+                        sql = `insert into costales (select id_movimiento, fecha,no_parte,secuencia from movimientos_almacenes where secuencia is not null and secuencia='${secuencia}' and id_destino is null and id_movimiento not in(select id_movimiento from costales));`;
                         con.query(sql, function (err) {
                             if (err) throw err
                             else res.send({ message: `Costal ${secuencia} Registrado Correctamente` });

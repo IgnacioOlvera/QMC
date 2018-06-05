@@ -8,5 +8,7 @@ api.get('/inicio', function (req, res) {
 api.get('/recibo',function(req,res){
     res.sendFile(path.join(__dirname,'../../client/production/recibo.html'));
 });
-
+api.get('/envios',function(req,res){
+    res.sendFile(path.join(__dirname,'../../client/production/envios.html'));
+});
 module.exports = api;

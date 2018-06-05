@@ -19,6 +19,23 @@ api.get('/cliente/:id?', function (req, res) {
     }
 });
 
+api.get('/clienteNat/:id?', function (req, res) {
+    //Seleccionar un almacén en específico
+    if (req.params.id) {
+        var naturaleza = req.params.id;
+        con.query(`select * from clientes where nat=${naturaleza}`, function (err, rows) {
+            if (err) throw err
+            else res.send(rows);
+        });
+    //Seleccionar todos los clientes
+    } else {
+        con.query("select * from clientes", function (error, rows) {
+            if (error) throw error
+            else res.send(rows);
+        });
+    }
+});
+
 api.post('/cliente/:b', function (req, res) {
     let cliente = req.body;
     let sql = "";
