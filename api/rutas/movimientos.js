@@ -56,7 +56,7 @@ api.post('/entradas', function (req, res) {
                 con.query(sql, function (err) {
                     if (err) throw err
                     else {
-                        console.log(parte);
+
                         sql = `update partes set existencia=existencia+${cantidad} where no_parte=${parte};`;
                         con.query(sql, function (err) {
                             if (err) throw err

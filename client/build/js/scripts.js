@@ -1,5 +1,6 @@
-//import '../../build/js/jquery-3.3.1.js';
-let t = $('#piezasRecibo').DataTable();
+let t = $('#piezasRecibo').DataTable({
+    "ordering": false
+});
 async function init() {
     let pet = await fetch('http://localhost:3000/cliente');
     let clientes = await pet.json();
@@ -19,59 +20,57 @@ $("#fecha_recibo").daterangepicker({
     singleDatePicker: !0,
     singleClasses: "picker_4"
 }, function (a, b, c) {
-    console.log(a.toISOString(), b.toISOString(), c)
+    //console.log(a.toISOString(), b.toISOString(), c)
 });
 
-$('#in_cliente').on('change',async function(){
-    let pet=await  fetch('http://localhost:3000/proveedor/'+$(this).val());
-    let partes=await pet.json();
-    partes.forEach(parte=>{
-        t.row.add([parte.interior,parte.exterior,parte.descripcion]).draw(false);
+$('#in_cliente').on('change', async function () {
+    let pet = await fetch('http://localhost:3000/proveedor/' + $(this).val());
+    let partes = await pet.json();
+    t.rows().remove().draw();
+    partes.forEach(parte => {
+        t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="text" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw();
+    });
+
+    $('.cantidad').on('keyup', function () {
+        let cantidad = $(this).val();
+        let cant_caja = $(this).data("caja");
+        let cant_pallet = $(this).data("pallet");
+        let caja = $(this).parent().siblings('td').children(".cajas");
+        let pallet = $(this).parent().siblings('td').children(".pallets");
+        let tot_cajas = Math.floor(cantidad / cant_caja);
+        let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+        caja.text(tot_cajas);
+        pallet.text(tot_pallets);
     });
 });
 
-$('#agregarRecibo').on('click', function () {
-    let data = $('#form1').serializeObject();
-    let cliente = $('#in_cliente option:selected').text();
-    if (cliente != "" && data.id_parte != "" && data.cant_parte != "" && data.fecha != "") {
-        let d = [cliente, data.id_parte, data.cant_parte, data.fecha, data.id_contenedor, data.id_candado, data.secuencia, '<button style="border:none; background: transparent;"><span class="fa fa-remove del"></span></button>'];
-        t.row.add(d).node().id = data.id_proveedor;
-        t.draw(false);
-    }
-});
-
-$('#piezasRecibo tbody').on('click', '.del', function () {
-    let tr = $($($($(this).parent()).parent())).parent();
-    if (tr.hasClass('selected')) {
-        tr.removeClass('selected');
-    }
-    else {
-        tr.addClass('selected');
-    }
-});
-
-$('#eliminarRecibo').click(function () {
-    t.rows('.selected').remove().draw();
-});
 $('#limpiarRecibo').click(function () {
     t.rows().remove().draw();
 });
 
 $('#terminarRecibo').on('click', async function () {
-    /*let a = JSON.stringify($("#form1").serializeObject());
-    let options = {
-        method:'POST',
-        body: a,
-        headers: { "Content-Type": "application/json" }
-    }
-    let c = await fetch('http://localhost:3000/entradas', options);
-    let res = await c.json();
-    alert(res.message);*/
-    t.rows().every(function (rowIdx, tableLoop, rowLoop) {
-        var data = this.data();
-        console.log(data);
+    let cantidades = t.$('.cantidad').serialize();
+    cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");
+    t.rows().every(async function (rowIdx, tableLoop, rowLoop) {
+        if (cantidades[rowIdx] > 0) {
+            let a = JSON.stringify($("#form1").serializeObject());
+            let data = this.data();
+            console.log(rowIdx);
+            a = JSON.parse(a);
+            a.id_parte = data[0];
+            a.cant_parte = cantidades[rowIdx];
+            a=JSON.stringify(a);
+            let options = {
+                method: 'POST',
+                body: a,
+                headers: { "Content-Type": "application/json" }
+            }
+            let c = await fetch('http://localhost:3000/entradas', options);
+            let res = await c.json();
+            t.$('.cantidad').val("");
+            alert(res.message);
+        }
     });
-
 });
 (function ($) {
     $.fn.serializeObject = function () {
