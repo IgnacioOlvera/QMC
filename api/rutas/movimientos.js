@@ -33,14 +33,14 @@ api.post('/entradas', function (req, res) {
         proveedor = entrada.id_proveedor || null,
         parte = entrada.id_parte || null,
         cantidad = entrada.cant_parte || null,
-        fecha = entrada.fecha || null,    
-        contenedor = `${entrada.id_contenedor}` || null,
-        candado = `${entrada.id_candado}` || null,
+        fecha = entrada.fecha || null,
+        contenedor = (entrada.id_candado=="") ? null : `'${entrada.id_contenedor}'`,
+        candado = (entrada.id_candado=="") ? null : `'${entrada.id_candado}'`,
         secuencia = entrada.secuencia || null;
     if (entrada != null) {
         if (proveedor != null && parte != null && cantidad != null && fecha != null && cantidad > 0) {
             if (secuencia != null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),null,${contenedor},${candado},'${secuencia}')`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),null,${contenedor},${candado},${secuencia})`;
                 con.query(sql, function (err) {
                     if (err) throw err
                     else {
