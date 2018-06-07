@@ -20,7 +20,7 @@ api.get('/parte/:id?', function (req, res) {
 api.post('/parte/:b', function (req, res) {
     let parte = req.body;
     let b = req.params.b;//Bandera para decidir si es actualización o inserción
-    if (parte != null&&(b==0||b==1)) {
+    if (parte != null && (b == 0 || b == 1)) {
         let id_parte = parte.id_parte,
             no_parte = parte.no_parte,
             descripcion = parte.descripcion,
@@ -45,7 +45,7 @@ api.post('/parte/:b', function (req, res) {
                 });
         }
     } else {
-        res.send({message:'Ocurrió un error'});
+        res.send({ message: 'Ocurrió un error' });
     }
 });
 //Eliminar parte
@@ -66,16 +66,23 @@ api.get('/existencia/:id?', function (req, res) {
         let id_parte = req.params.id
         let sql = `select no_parte,descripcion, existencia, floor(existencia/cant_x_caja) cajas, floor((existencia/cant_x_caja)/cant_x_pallet) tarimas from partes where id_parte=${id_parte};`;
         con.query(sql, function (err, rows) {
-            if(err) throw err
+            if (err) throw err
             else res.send(rows);
         });
     } else {
-        let sql =`select no_parte,descripcion, existencia, floor(existencia/cant_x_caja) cajas, floor((existencia/cant_x_caja)/cant_x_pallet) tarimas from partes`;
-        con.query(sql,function(err,rows){
-            if(err) throw err
+        let sql = `select no_parte,descripcion, existencia, floor(existencia/cant_x_caja) cajas, floor((existencia/cant_x_caja)/cant_x_pallet) tarimas from partes`;
+        con.query(sql, function (err, rows) {
+            if (err) throw err
             else res.send(rows);
         });
     }
 });
 
+//Selecciona todos los costales
+api.get('/costales', function (req, res) {
+    let sql = `select * from costales order by fecha`;
+    con.query(sql, function (err, rows) {
+        (err)?res.send({ message: 'Ocurrió un error', status: "500" }):res.send(rows);
+    });
+});
 module.exports = api;

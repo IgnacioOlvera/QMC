@@ -4022,16 +4022,16 @@ header {
 }
 
 #nprogress .bar {
-    background: #1ABB9C
+    background: #d51f2e
 }
 
 #nprogress .peg {
-    box-shadow: 0 0 10px #1ABB9C, 0 0 5px #1ABB9C
+    box-shadow: 0 0 10px #d51f2e, 0 0 5px #d51f2e
 }
 
 #nprogress .spinner-icon {
-    border-top-color: #1ABB9C;
-    border-left-color: #1ABB9C
+    border-top-color: #d51f2e;
+    border-left-color: #d51f2e;
 }
 
 .editor-wrapper {
