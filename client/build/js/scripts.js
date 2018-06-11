@@ -1,5 +1,12 @@
 //Función para incializar en la sección de recibo
 async function initRecibo() {
+    let selectColor=`<select class="form-control color" style="background-color:red">`;
+    let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
+    $('#color').on('change',function(){
+        let color = $(this).val();
+        $(this).css('background-color', "#"+fifoColorsTNET[color]);
+    });
+
     let count = 1;//Contador para los costales
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
         "ordering": false
@@ -19,7 +26,9 @@ async function initRecibo() {
         let cod = ("0" + fecha[0]).slice(-2) + ("0" + fecha[1]).slice(-2) + fecha[2].substr(-2) + "-" + ("0" + count).substr(-2);//Código de serial de costales.
         tnet.row.add([count, '<input id="peso" type=number name="peso" class="form-control peso" placeholder="Peso en KG"/>', `<input id="serial" name="serial" class='form-control serial' type='text' value='${cod}'>`]).draw(false);//Agregar fila a la tbla de tnet
         count++;
+        
     });
+    
     $("#fecha_recibo").daterangepicker({ //Configuración del datepicker
         singleDatePicker: !0,
         singleClasses: "picker_4",
@@ -29,7 +38,7 @@ async function initRecibo() {
     }, function (a, b, c) {
         //console.log(a.toISOString(), b.toISOString(), c)
     });
-
+    
     $('#in_cliente').on('change', async function () {//Evento del select de cliente
         if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
             $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
@@ -93,11 +102,12 @@ async function initRecibo() {
         let seriales = tnet.$('.serial').serialize().replace(/serial=/gi, "").split("&");//obenter los seriales de los costales
         tnet.rows().every(async function (rowIdx, tableLoop, rowLoop) {
             let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
-            let data = this.data();//Obtener la información de la línea recorrida
+            let color = $('#color').val();//Obtener la información de la línea recorrida
             a.secuencia = seriales[rowIdx];//setear en el json la secuencia del costal
             a.id_parte = "5";//setear el número de parte en este caso el 5 es simplemente un costal.
             a.peso = pesos[rowIdx]//setear peso en el json la secuencia del costal
             a.cant_parte = 1;//setear la cantidad de partes
+            a.color=color;
             a = JSON.stringify(a);//convertir en string  el objeto json para pasarlo al bakend
             let options = {//opciones de la petición
                 method: 'POST',
@@ -118,6 +128,7 @@ async function initRecibo() {
 }
 async function initEnvios() {
     let fifoColors = ['BCABA0', 'ADCC78', '16991F', '569900', 'B11B07', 'FF0008', 'E00F47', 'CE5668', 'C47B97', 'CC7695', '522445', '4A5071'];//Colores FIFO de QMC
+    let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
     let count = 1;
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
         "ordering": false
@@ -150,12 +161,11 @@ async function initEnvios() {
     let costales = await pet.json();
 
     costales.forEach(costal => {
-        color = costal.secuencia.substr(2, 2).replace(/0/gi, "")
-        tnet.row.add(['<input type="checkbox" id="check-all" class="flat">', costal.secuencia, costal.peso, `<div class="col-md-1" style="width: 100px; height: 40px; background-color:#${fifoColors[color - 1]}"> </div>`,costal.nota]).draw();
-
+        color = costal.color;
+        tnet.row.add(['<input type="checkbox" id="check-all" class="flat">', `<label id="scotal" name="secuencia">${costal.secuencia}</label>`, `<label id="pcostal" name="peso">${costal.peso}</label>`, `<div class="col-md-1" style="width: 100px; height: 40px; background-color:#${fifoColorsTNET[color]}"> </div>`, `<label id="ncostal" name="nota">${costal.nota}</label>`]).draw();
     });
     tnet.$('input[type="checkbox"]').iCheck({
-        checkboxClass: 'icheckbox_flat-green'
+        checkboxClass: 'icheckbox_flat-red'
     });
 
     $('#in_cliente').on('change', async function () {
@@ -225,34 +235,77 @@ async function initEnvios() {
     });
 
     $('#terminarReciboCostales').on('click', function () {//Evento para terminar los recibos de contales
-        let pesos = tnet.$('.peso').serialize().replace(/peso=/gi, "").split("&");//obtener los pesos de los costales.        
-        let seriales = tnet.$('.serial').serialize().replace(/serial=/gi, "").split("&");//obenter los seriales de los costales
-        tnet.rows().every(async function (rowIdx, tableLoop, rowLoop) {
+        $('#piezasTNET > tbody  > tr > td > .checked').each(async function () {
             let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
-            let data = this.data();//Obtener la información de la línea recorrida
-            a.secuencia = seriales[rowIdx];//setear en el json la secuencia del costal
-            a.id_parte = "5";//setear el número de parte en este caso el 5 es simplemente un costal.
-            a.peso = pesos[rowIdx]//setear peso en el json la secuencia del costal
-            a.cant_parte = "1";//setear la cantidad de partes
-            a.id_destino = destino;
-            a = JSON.stringify(a);//convertir en string  el objeto json para pasarlo al bakend
-            let options = {//opciones de la petición
-                method: 'POST',
-                body: a,
-                headers: { "Content-Type": "application/json" }
-            }
-            let c = await fetch('http://localhost:3000/salidas', options);//petición
-            let res = await c.json();
-            tnet.rows().remove().draw();
-            if (res.status == 200) {
-                $.notify(res.message, "success");//mensaje del backend
+            if (a.id_destino != 0 && a.id_cliente != 0 && a.fecha != 0) {
+                var datos = [];
+                var row = tnet.row($(this).parents('tr'));
+                row.remove().draw();
+                $($($(this).parent().siblings().children('label'))).each(function () {
+                    datos.push($(this).text());
+                });
+                a.secuencia = datos[0];//setear en el json la secuencia del costal
+                a.id_parte = "5";//setear el número de parte en este caso el 5 es simplemente un costal.
+                a.peso = datos[1]//setear peso en el json la secuencia del costal
+                a.cant_parte = "1";//setear la cantidad de partes
+                a.nota = datos[2];
+                a = JSON.stringify(a);//convertir en string  el objeto json para pasarlo al bakend
+                let options = {//opciones de la petición
+                    method: 'POST',
+                    body: a,
+                    headers: { "Content-Type": "application/json" }
+                }
+                let c = await fetch('http://localhost:3000/salidas', options);//petición
+                let res = await c.json();
+                if (res.status == 200) {
+                    $.notify(res.message, "success");//mensaje del backend
+                    cont = 0;
+                } else {
+                    $.notify(res.message);
+                }
             } else {
-                $.notify(res.message);
+                $.notify("Falta Proporcionar Datos Obligatorios (*)");
+                cont = 0;
             }
         });
     });
 }
-
+async function initPartes(){
+    let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
+        "ordering": false
+    });
+    let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
+        "ordering": false
+    });
+    let pet = await fetch('http://localhost:3000/clienteNat/0');
+    let clientes = await pet.json();
+    $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
+    clientes.forEach(cliente => {
+        $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
+    });
+    $('#in_cliente').on('change', async function () {
+        if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
+            $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
+            $('#tablaTNET').show('oculto');//muestra la tabla de tnet
+        } else {
+            $('#piezas').show('oculto');//mostrar la tabla de clientes normales
+            $('#tablaTNET').hide('oculto');//ocultar la tabla de tnet
+            let pet = await fetch('http://localhost:3000/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
+            let partes = await pet.json();
+            t.rows().remove().draw();//Quitar todos los elementos de la tabla.
+            partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
+                t.row.add([parte.interior, parte.exterior, parte.descripcion, parte.cant_min,parte.existencia,`<div class="row"><div class="col-md-2"><button type="button" class="btn btn-primary" data-toggle="modal" data-target=".modal-lg">Large modal</button></div></div>`]);
+            });
+            t.draw();
+        }
+    });
+    t.on( 'draw', function () {
+        $('#piezas tr').on('click', function () {
+            $(this).attr({'data-toggle':'modal','data-target':'.modal-lg'});
+        });
+    } );
+   
+}
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {
 

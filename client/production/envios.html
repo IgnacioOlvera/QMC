@@ -18,7 +18,7 @@
     <!-- NProgress -->
     <link href="../vendors/nprogress/nprogress.css" rel="stylesheet">
     <!-- iCheck -->
-    <link href="../vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+    <link href="../vendors/iCheck/skins/flat/red.css" rel="stylesheet">
     <!-- Datatables -->
     <link href="../vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" rel="stylesheet">
     <link href="../vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css" rel="stylesheet">
@@ -54,27 +54,48 @@
                         <div class="menu_section">
                             <h3>General</h3>
                             <ul class="nav side-menu">
-                                <li>
-                                    <a href='/inicio'>
-                                        <i class="fa fa-home"></i> Inicio
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href='/recibo'>
-                                        <i class="fa fa-mail-reply"></i> Recibos
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href='/envios'>
-                                        <i class="fa fa-mail-forward"></i> Envíos
-                                    </a>
-                                </li>
-                                <li>
-                                    <a>
-                                        <i class="fa fa-line-chart"></i> Reportes
-                                    </a>
-                                </li>
-                            </ul>
+                                    <li>
+                                        <a href='/inicio'>
+                                            <i class="fa fa-home"></i> Inicio
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href='/recibo'>
+                                            <i class="fa fa-mail-reply"></i> Recibos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href='/envios'>
+                                            <i class="fa fa-mail-forward"></i> Envíos
+                                        </a>
+                                    </li>
+    
+                                    <li>
+                                        <a href='/partesPag'>
+                                            <i class="fa fa-plug"></i> Partes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href='/clientesPag'>
+                                            <i class="fa fa-industry"></i> Clientes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href='/movimientosPag'>
+                                            <i class="fa fa-exchange"></i> Movimientos
+                                        </a href='/envios'>
+                                    </li>
+                                    <li>
+                                        <a href='/contactosPag'>
+                                            <i class="fa fa-user"></i> Contactos
+                                        </a href='/envios'>
+                                    </li>
+                                    <li>
+                                        <a href='/reportes'>
+                                            <i class="fa fa-line-chart"></i> Reportes
+                                        </a>
+                                    </li>
+                                </ul>
                         </div>
                     </div>
                     <!-- /sidebar menu -->
@@ -186,10 +207,8 @@
                                         <table class="table table-striped table-bordered" id="piezasTNET">
                                             <thead>
                                                 <tr>
-                                                    <th>
-                                                        <input type="checkbox" id="check-all" class="flat">
-                                                    </th>
-                                                    <th>Identificador</th>                                                    
+                                                    <th>Selección</th>
+                                                    <th>Identificador</th>
                                                     <th>Peso</th>
                                                     <th>Color de FIFO</th>
                                                     <th>Número de Nota</th>
@@ -233,7 +252,8 @@
     <script src="../vendors/fastclick/lib/fastclick.js"></script>
     <!-- NProgress -->
     <script src="../vendors/nprogress/nprogress.js"></script>
-
+    <!-- iCheck -->
+    <script src="../vendors/iCheck/icheck.min.js"></script>
     <!-- validator -->
     <script src="../vendors/validator/validator.js"></script>
     <!-- Moment -->
@@ -263,12 +283,11 @@
     <script src="../build/js/notify.js"></script>
     <script src="../build/js/scripts.js"></script>
     <script>
-        $(document).ready(function(){
+        $(document).ready(function () {
             initEnvios();
         });
     </script>
-        <!-- iCheck -->
-  <script src="../vendors/iCheck/icheck.min.js"></script>
+
 </body>
 
 </html>
