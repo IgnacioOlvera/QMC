@@ -1,6 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
+
 //Regresa historial de movimientos
 api.get('/movimientos', function (req, res) {
     let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
@@ -29,6 +30,8 @@ api.get('/salidas', function (req, res) {
 //Registrar entrada de piezas
 
 api.post('/entradas', function (req, res) {
+    let f = new Date();
+    cad = f.getHours() + ":" + ("0" + f.getMinutes()).slice(-2) + ":" + f.getSeconds();
     let cont = 0;
     let entrada = req.body;
     let
@@ -42,14 +45,14 @@ api.post('/entradas', function (req, res) {
         peso = entrada.peso || null,
         nota = entrada.id_nota || null,
         color = entrada.color || null;
-    let consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},(select existencia from partes where no_parte=${parte}),(select existencia+${cantidad} from partes where no_parte=${parte}),str_to_date('${fecha}','%d/%m/%Y %T'),null,${contenedor},${candado},'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia+${cantidad} where no_parte=${parte};`, `insert into costales (select id_movimiento, fecha,peso,secuencia,nota, ${color} from movimientos_almacenes where secuencia is not null and secuencia='${secuencia}' and id_destino is null and id_movimiento not in(select id_movimiento from costales));`];
+    let consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},(select existencia from partes where no_parte=${parte}),(select existencia+${cantidad} from partes where no_parte=${parte}),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia+${cantidad} where no_parte=${parte};`, `insert into costales (select id_movimiento, fecha,peso,secuencia,nota, ${color} from movimientos_almacenes where secuencia is not null and secuencia='${secuencia}' and id_destino is null and id_movimiento not in(select id_movimiento from costales));`];
     if (entrada != null) {
         if (proveedor != null && parte != null && cantidad != null && fecha != null && cantidad > 0) {
-            if (secuencia != null && peso != null && nota != null && color != null) {
+            if (secuencia != null && peso != null && nota != null && color != null && color>=0) {
                 consultas.forEach(consulta => {
                     con.query(consulta, function (err) {
-                        if (err) {
-                            res.send({ message: `Ocurrió un error SQL`, status: "500" });
+                        if (err) { 
+                           res.send({ message: `Ocurrió un error SQL`, status: "500" });
                             return;
                         }
                         else {
@@ -63,7 +66,7 @@ api.post('/entradas', function (req, res) {
                     });
                 });
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia+${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha}','%d/%m/%Y %T'),null,${contenedor},${candado},null,null,null)`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia+${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,null)`;
                 con.query(sql, function (err) {
                     if (err) {
                         res.status(500).send({ message: 'Ocurrió un error SQL', status: "500" });
@@ -89,6 +92,8 @@ api.post('/entradas', function (req, res) {
 });
 
 api.post('/salidas', function (req, res) {
+    let f = new Date();
+    cad = f.getHours() + ":" + ("0" + f.getMinutes()).slice(-2) + ":" + f.getSeconds();
     let cont = 1;
     let salida = req.body;
     let
@@ -100,7 +105,7 @@ api.post('/salidas', function (req, res) {
         secuencia = salida.secuencia || null,
         peso = salida.peso || null,
         nota = salida.id_nota || null;
-    consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select count(*) from costales),(select count(*)-${cantidad} from costales),str_to_date('${fecha}','%d/%m/%Y %T'),null,null,null,'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia-${cantidad} where no_parte=${parte}`, `delete from costales where secuencia='${secuencia}'`];
+    consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select count(*) from costales),(select count(*)-${cantidad} from costales),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,null,null,'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia-${cantidad} where no_parte=${parte}`, `delete from costales where secuencia='${secuencia}'`];
 
     if (salida != null) {
         if (proveedor != null && destino != null && parte != null && cantidad != null && fecha != null && cantidad > 0) {
@@ -108,8 +113,8 @@ api.post('/salidas', function (req, res) {
                 consultas.forEach(consulta => {
                     con.query(consulta, function (err) {
                         if (err) {
-                            console.log(err)
                             res.send({ message: `Ocurrió un error SQL`, status: "500" });
+
                             return;
                         }
                         else {
@@ -124,13 +129,13 @@ api.post('/salidas', function (req, res) {
                 });
 
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia-${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha}','%d/%m/%Y %T'),null,null,null,null,null,null)`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia-${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,null,null,null,null,null)`;
                 con.query(sql, function (err) {
-                    if (err) throw err
+                    if (err) res.send({ message: 'Ocurrió un error SQL', status: "500" });
                     else {
                         sql = `update partes set existencia=existencia-${cantidad} where no_parte=${parte};`;
                         con.query(sql, function (err) {
-                            if (err) throw err
+                            if (err) res.send({ message: 'Ocurrió un error SQL', status: "500" });
                             else res.send({ message: 'Salida Registrada Correctamente', status: "200" });
                         });
                     }
@@ -179,7 +184,7 @@ api.post('movimientos/:id/:a', function (req, res) {
                             }
                         });
                     } else if (a == 1) {//editar movimiento de costales y de movimientos
-                        let sql = `update movimientos set id_almacén=${almacen},id_proveedor=${proveedor},id_destino=${destino},no_parte=${parte},cant_parte=${cantidad},str_to_date('${fecha}','%d/%m/%Y %T'),id_servicio=${servicio},id_contendor='${contenedor}',id_candado='${candado}',secuencia='${secuencia}')`;
+                        let sql = `update movimientos set id_almacén=${almacen},id_proveedor=${proveedor},id_destino=${destino},no_parte=${parte},cant_parte=${cantidad},str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),id_servicio=${servicio},id_contendor='${contenedor}',id_candado='${candado}',secuencia='${secuencia}')`;
                         con.query(sql, function (err) {
                             if (err) throw err
                             else {

@@ -1,10 +1,9 @@
 //Función para incializar en la sección de recibo
 async function initRecibo() {
-    let selectColor=`<select class="form-control color" style="background-color:red">`;
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
-    $('#color').on('change',function(){
+    $('#color').on('change', function () {
         let color = $(this).val();
-        $(this).css('background-color', "#"+fifoColorsTNET[color]);
+        $(this).css('background-color', "#" + fifoColorsTNET[color]);
     });
 
     let count = 1;//Contador para los costales
@@ -26,9 +25,9 @@ async function initRecibo() {
         let cod = ("0" + fecha[0]).slice(-2) + ("0" + fecha[1]).slice(-2) + fecha[2].substr(-2) + "-" + ("0" + count).substr(-2);//Código de serial de costales.
         tnet.row.add([count, '<input id="peso" type=number name="peso" class="form-control peso" placeholder="Peso en KG"/>', `<input id="serial" name="serial" class='form-control serial' type='text' value='${cod}'>`]).draw(false);//Agregar fila a la tbla de tnet
         count++;
-        
+
     });
-    
+
     $("#fecha_recibo").daterangepicker({ //Configuración del datepicker
         singleDatePicker: !0,
         singleClasses: "picker_4",
@@ -38,7 +37,7 @@ async function initRecibo() {
     }, function (a, b, c) {
         //console.log(a.toISOString(), b.toISOString(), c)
     });
-    
+
     $('#in_cliente').on('change', async function () {//Evento del select de cliente
         if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
             $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
@@ -107,7 +106,7 @@ async function initRecibo() {
             a.id_parte = "5";//setear el número de parte en este caso el 5 es simplemente un costal.
             a.peso = pesos[rowIdx]//setear peso en el json la secuencia del costal
             a.cant_parte = 1;//setear la cantidad de partes
-            a.color=color;
+            a.color = color;
             a = JSON.stringify(a);//convertir en string  el objeto json para pasarlo al bakend
             let options = {//opciones de la petición
                 method: 'POST',
@@ -121,6 +120,7 @@ async function initRecibo() {
                 $.notify(res.message, "success");//mensaje del backend
             } else {
                 $.notify(res.message);
+                count = 1;
             }
 
         });
@@ -152,7 +152,10 @@ async function initEnvios() {
     });
     $("#fecha_recibo").daterangepicker({
         singleDatePicker: !0,
-        singleClasses: "picker_4"
+        singleClasses: "picker_4",
+        locale: {
+            format: 'DD/MM/YYYY'
+        }
     }, function (a, b, c) {
         //console.log(a.toISOString(), b.toISOString(), c)
     });
@@ -197,7 +200,7 @@ async function initEnvios() {
 
     $('#limpiarReciboCostales').click(function () {//Evento para limpar toda la tabla de costales ingresados
         tnet.rows().remove().draw();
-        count = 1;
+        count = 0;
     });
 
     $('#terminarRecibo').on('click', async function () {//Enviar todas las filas para realzar movimientos en la base de datos.
@@ -226,8 +229,10 @@ async function initEnvios() {
                 } else {
                     if (res.status == 200) {
                         $.notify(res.message, "success");//mensaje del backend
+                        count = 0;
                     } else {
                         $.notify(res.message);
+                        count = 0;
                     }
                 }
             }
@@ -270,12 +275,36 @@ async function initEnvios() {
         });
     });
 }
-async function initPartes(){
+async function initPartes() {
+    let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO 
+    let modales = "";
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
-        "ordering": false
+        "ordering": false,
+        "createdRow": function (row, data) {
+            $(row).attr("data-prove", data[0]);
+            let min = data[3];
+            let existencia = data[4];
+            (min > existencia) ? setInterval(function () {
+                $(row).css({
+                    "color": "black", "background-color": function () {
+                        this.switch = !this.switch
+                        return this.switch ? "#d51f2e9c" : "#fff"
+                    }, 'font-weight': 'bold'
+                });
+            }, 700) : "";
+
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ], "bPaginate": false
     });
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
-        "ordering": false
+        "ordering": false,
+        "createdRow": function (row, data, index) {
+            $('td', row).eq(4).css('background-color', "#" + fifoColorsTNET[data[4]]).html("");
+        }
     });
     let pet = await fetch('http://localhost:3000/clienteNat/0');
     let clientes = await pet.json();
@@ -283,28 +312,146 @@ async function initPartes(){
     clientes.forEach(cliente => {
         $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
     });
+    pet = await fetch("http://localhost:3000/costales");
+
+    let costales = await pet.json();
+    let tnetmodals = "";
+    costales.forEach(costal => {
+        let fecha = costal.fecha.split("T")[0] + " " + costal.fecha.split("T")[1].split(".")[0];
+        let color = costal.color;
+        console.log(color);
+        tnetmodals += `<div style="display:none" id="modal-${costal.secuencia}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Costal ${costal.secuencia}</h4> </div> <div class="modal-body"> <form id="Costal-${costal.secuencia}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Secuencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${costal.secuencia}" name="secuencia" id="in_secuencia-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Secuencia" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" value="${costal.peso}" id="in_peso-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Peso"/></div></div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Fecha de Entrada <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${fecha}" name="fecha" id="in_fecha-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Fecha de entrada" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Identificador FIFO <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control" data-color="${costal.color}"  id="color-${costal.secuencia}" name="color" style="background-color:#${fifoColorsTNET[color]}"><option hidden selected value="${color}"></option><option value="0" style="background-color:#C00000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="1" style="background-color:#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="2" style="background-color:#FFC000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="3" style="background-color:#FFFF00">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="4" style="background-color:#92D050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="5" style="background-color:#00B050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="6" style="background-color:#00B0F0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="7" style="background-color:#0070C0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="8" style="background-color:#002060">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="9" style="background-color:#7030A0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nota <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${costal.nota}" name="nota" id="in_nota-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="N° de Nota" /> </div> </div> </div> </form> </div> <div class="modal-footer"> <button type="button" data-target=${costal.secuencia} class="btn btn-primary actualizarCostal">Guardar Cambios</button> </div> </div> </div> </div>`;
+        tnet.row.add([costal.nota, fecha, costal.peso, costal.secuencia, costal.color, `<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-${costal.secuencia}">Editar <span class="fa fa-edit"></span></button>`]).draw();
+
+    });
+
+    $('#tnetModals').html(tnetmodals);
+
+    $('.modal-costales').find('select').on('change', function () {
+        let color = $(this).val();
+        $(this).css({ 'background-color': `#${fifoColorsTNET[color]}` });
+    });
+
+    $('.actualizarCostal').on('click', async function () {
+        let f = $(`#Costal-${$(this).data("target")}-Details`);
+        let form = f.serializeObject();
+        //form.color=$(f).find("select").data("color");
+        let options = {
+            method: 'post',
+            body: JSON.stringify(form),
+            headers: { "Content-Type": "application/json" }
+        }
+        let url = "http://localhost:3000/costales";
+        let pet = await fetch(url, options);
+        let r = await pet.json();
+        if (r.status == 500)
+            $.notify(r.message);
+        else if (r.status == 200) {
+            $.notify(r.message, 'success');
+        }
+    });
+
+
+    let bandera = true;
     $('#in_cliente').on('change', async function () {
+        if (bandera == true) {
+            let pet = await fetch('http://localhost:3000/proveedor');//Petición para traer todas las piezas que surte un proveedor
+            let partes = await pet.json();
+            partes.forEach(parte => {
+                (parte.exterior == null) ? parte.exterior = "" : parte.exterior;
+                modales += `<div style="display:none" id="modal-${parte.interior}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${parte.descripcion} - ${parte.interior}</h4> </div> <div class="modal-body"> <form id="Parte-${parte.interior}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.interior}" name="no_parte" id="in_no_parte-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte Exterior </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.exterior}" name="no_parte_ext" id="in_no_parte_ext-${parte.exterior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte Exterior En Caso de Existir" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="descripcion" value="${parte.descripcion}" id="in_decripcion-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Descripción" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Caja <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.caja}" name="cant_x_caja" id="in_cantxcaja-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Caja" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Pallet <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.pallet}" min="0" name="cant_x_pallet" id="in_cantxpallet-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Pallet" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Mínima <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.cant_min}" min="0" name="cant_min" id="in_cant_min-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Existencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.existencia}" name="existencia" id="in_existencia-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> </div> </form></div> <div class="modal-footer"> <button type="button" data-target="${parte.interior}" data-parte="${parte.interior}" class="btn btn-primary actualizarParte">Guardar Cambios</button></div> </div> </div> </div>`;
+                let cajas = Math.floor(parte.existencia / parte.caja);
+                let tarimas = Math.floor(cajas / parte.pallet);
+                t.row.add([parte.id_proveedor, parte.interior, parte.exterior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
+            });
+            t.draw();
+            bandera = !bandera;
+        }
         if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
             $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
             $('#tablaTNET').show('oculto');//muestra la tabla de tnet
         } else {
             $('#piezas').show('oculto');//mostrar la tabla de clientes normales
             $('#tablaTNET').hide('oculto');//ocultar la tabla de tnet
-            let pet = await fetch('http://localhost:3000/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
-            let partes = await pet.json();
-            t.rows().remove().draw();//Quitar todos los elementos de la tabla.
-            partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
-                t.row.add([parte.interior, parte.exterior, parte.descripcion, parte.cant_min,parte.existencia,`<div class="row"><div class="col-md-2"><button type="button" class="btn btn-primary" data-toggle="modal" data-target=".modal-lg">Large modal</button></div></div>`]);
+            $('#piezasRecibo tbody').find('tr').hide();
+            let rows = $(`[data-prove=${$(this).val()}]`)
+            rows.show();
+            $('#modals').html(modales);
+            $('.proveedores').html($('#in_cliente').html());
+            $('.eliminar').on('click', async function () {
+                let parte = $(this).data("target");
+                let options = {
+                    method: 'delete',
+                    headers: { "Content-Type": "application/json" }
+                }
+                let pet = await fetch(`http://localhost:3000/parte/${parte}`, options);
+                let res = await pet.json();
+
+                if (res.status == 500)
+                    $.notify(res.message);
+                else if (res.status == 200) {
+                    $.notify(res.message, 'success');
+                    t.row($(this).parents('tr')).remove().draw();
+                }
             });
-            t.draw();
+
+            $('.actualizarParte').on('click', async function () {
+                let form = $(`#Parte-${$(this).data("target")}-Details`).serializeObject();
+                console.log(form);
+                let row = t.row($($($('#piezas').find(`[data-parte="${form.no_parte}"]`)).parents('tr')));
+                let cajas = Math.floor(form.existencia / form.cant_x_caja);
+                let tarimas = Math.floor(cajas / form.cant_x_pallet);
+                let options = {
+                    method: 'post',
+                    body: JSON.stringify(form),
+                    headers: { "Content-Type": "application/json" }
+                }
+                let pet = await fetch('http://localhost:3000/parte/0', options);
+                let res = await pet.json();
+                if (res.status == 500) {
+                    $.notify(res.message);
+                } else if (res.status == 200) {
+                    $.notify(res.message, 'success');
+                    t.cell(row, 1).data(form.interior);
+                    t.cell(row, 2).data(form.no_parte_ext);
+                    t.cell(row, 3).data(form.descripcion);
+                    t.cell(row, 4).data(form.cant_min);
+                    t.cell(row, 5).data(form.existencia);
+                    t.cell(row, 6).data(cajas);
+                    t.cell(row, 7).data(tarimas);
+                    $(`#modal-${$(this).data("target")}`).modal('toggle');
+                }
+            });
+        }
+
+    });
+    $('#in_provee').html($('#in_cliente').html());
+    $('#limpiarRegistro').on('click', function () {
+        $('#RegistrarParteForm')[0].reset();
+    });
+    $('#registroParte').on('click', async function () {
+        let form = $('#RegistrarParteForm').serializeObject();
+        form = JSON.stringify(form);
+        if (form != null) {
+            let options = {
+                method: 'post',
+                body: form,
+                headers: { "Content-Type": "application/json" }
+            }
+            let url = "http://localhost:3000/parte/1"
+            let pet = await fetch(url, options);
+            let res = await pet.json();
+
+            if (res.status == "200") {
+                $.notify("Parte Registrada Correctamente", "success");
+                $('#AgregarParteModal').modal('toggle');
+            } else if (res.status == "500") {
+                $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
+            }
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
         }
     });
-    t.on( 'draw', function () {
-        $('#piezas tr').on('click', function () {
-            $(this).attr({'data-toggle':'modal','data-target':'.modal-lg'});
-        });
-    } );
-   
 }
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {
@@ -372,4 +519,3 @@ async function initPartes(){
         return json;
     };
 })(jQuery);
-
