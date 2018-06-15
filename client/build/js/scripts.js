@@ -317,11 +317,11 @@ async function initPartes() {
     let costales = await pet.json();
     let tnetmodals = "";
     costales.forEach(costal => {
-        let fecha = costal.fecha.split("T")[0] + " " + costal.fecha.split("T")[1].split(".")[0];
+        let fecha = costal.fecha.split("T")[0];
         let color = costal.color;
         console.log(color);
-        tnetmodals += `<div style="display:none" id="modal-${costal.secuencia}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Costal ${costal.secuencia}</h4> </div> <div class="modal-body"> <form id="Costal-${costal.secuencia}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Secuencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${costal.secuencia}" name="secuencia" id="in_secuencia-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Secuencia" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" value="${costal.peso}" id="in_peso-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Peso"/></div></div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Fecha de Entrada <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${fecha}" name="fecha" id="in_fecha-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Fecha de entrada" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Identificador FIFO <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control" data-color="${costal.color}"  id="color-${costal.secuencia}" name="color" style="background-color:#${fifoColorsTNET[color]}"><option hidden selected value="${color}"></option><option value="0" style="background-color:#C00000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="1" style="background-color:#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="2" style="background-color:#FFC000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="3" style="background-color:#FFFF00">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="4" style="background-color:#92D050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="5" style="background-color:#00B050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="6" style="background-color:#00B0F0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="7" style="background-color:#0070C0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="8" style="background-color:#002060">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="9" style="background-color:#7030A0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nota <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${costal.nota}" name="nota" id="in_nota-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="N° de Nota" /> </div> </div> </div> </form> </div> <div class="modal-footer"> <button type="button" data-target=${costal.secuencia} class="btn btn-primary actualizarCostal">Guardar Cambios</button> </div> </div> </div> </div>`;
-        tnet.row.add([costal.nota, fecha, costal.peso, costal.secuencia, costal.color, `<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-${costal.secuencia}">Editar <span class="fa fa-edit"></span></button>`]).draw();
+        tnetmodals += `<div style="display:none" id="modal-${costal.secuencia}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Costal ${costal.secuencia}</h4> </div> <div class="modal-body"> <form id="Costal-${costal.secuencia}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Secuencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${costal.secuencia}" name="secuencia" id="in_secuencia-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Secuencia" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" value="${costal.peso}" id="in_peso-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Peso"/></div></div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Identificador FIFO <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control" data-color="${costal.color}"  id="color-${costal.secuencia}" name="color" style="background-color:#${fifoColorsTNET[color]}"><option hidden selected value="${color}"></option><option value="0" style="background-color:#C00000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="1" style="background-color:#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="2" style="background-color:#FFC000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="3" style="background-color:#FFFF00">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="4" style="background-color:#92D050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="5" style="background-color:#00B050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="6" style="background-color:#00B0F0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="7" style="background-color:#0070C0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="8" style="background-color:#002060">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="9" style="background-color:#7030A0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nota <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${costal.nota}" name="nota" id="in_nota-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="N° de Nota" /> </div> </div> </div> </form> </div> <div class="modal-footer"> <button type="button" data-target=${costal.secuencia} class="btn btn-primary actualizarCostal">Guardar Cambios</button> </div> </div> </div> </div>`;
+        tnet.row.add([costal.nota, fecha, costal.peso, costal.secuencia, costal.color, `<button type="button" class="btn btn-primary editarc" data-toggle="modal" data-parte=${costal.secuencia} data-target="#modal-${costal.secuencia}">Editar <span class="fa fa-edit"></span></button>`]).draw();
 
     });
 
@@ -335,7 +335,7 @@ async function initPartes() {
     $('.actualizarCostal').on('click', async function () {
         let f = $(`#Costal-${$(this).data("target")}-Details`);
         let form = f.serializeObject();
-        //form.color=$(f).find("select").data("color");
+        let row = $($('#piezasTNET').find(`[data-parte="${$(this).data("target")}"]`)).parents('tr');
         let options = {
             method: 'post',
             body: JSON.stringify(form),
@@ -344,13 +344,18 @@ async function initPartes() {
         let url = "http://localhost:3000/costales";
         let pet = await fetch(url, options);
         let r = await pet.json();
-        if (r.status == 500)
+        if (r.status == 500) {
             $.notify(r.message);
+        }
         else if (r.status == 200) {
             $.notify(r.message, 'success');
+            tnet.cell(row, 0).data(form.nota);
+            tnet.cell(row, 2).data(form.peso);
+            tnet.cell(row, 3).data(form.secuencia);
+            $('td', row).eq(4).css('background-color', "#" + fifoColorsTNET[form.color]);
+            $(`#modal-${$(this).data("target")}`).modal('toggle');
         }
     });
-
 
     let bandera = true;
     $('#in_cliente').on('change', async function () {
@@ -397,8 +402,7 @@ async function initPartes() {
 
             $('.actualizarParte').on('click', async function () {
                 let form = $(`#Parte-${$(this).data("target")}-Details`).serializeObject();
-                console.log(form);
-                let row = t.row($($($('#piezas').find(`[data-parte="${form.no_parte}"]`)).parents('tr')));
+                let row = t.row($($($('#piezas').find(`[data-parte="${$(this).data("target")}"]`)).parents('tr')));
                 let cajas = Math.floor(form.existencia / form.cant_x_caja);
                 let tarimas = Math.floor(cajas / form.cant_x_pallet);
                 let options = {

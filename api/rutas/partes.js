@@ -92,12 +92,11 @@ api.post('/costales', function (req, res) {
     let costal = req.body;
     //peso secuencia nota color
     let sql = `update costales set peso=${costal.peso},secuencia='${costal.secuencia}',nota=${costal.nota},color=${costal.color} where secuencia='${costal.secuencia}'`;
-    console.log(sql);
     con.query(sql, function (err) {
         if (err) {
             throw err
         } else {
-            res.send({ message: "Costal Actualizado Correctamente", status:"200" });
+            res.send({ message: "Costal Actualizado Correctamente", status: "200" });
         }
     });
 });
