@@ -457,6 +457,121 @@ async function initPartes() {
         }
     });
 }
+async function initClientes() {
+    let TablaClientes = $('#ClientesInfo').DataTable();
+    let url = "http://localhost:3000/cliente";
+    let pet = await fetch(url);
+    let clientes = await pet.json();
+    let modales = "", nat = ['Proveedor', 'Cliente'];
+    clientes.forEach(cliente => {
+        modales += `<div style="display:none" id="modal-${cliente.id_cliente}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${cliente.nombre}</h4> </div> <div class="modal-body"> <form id="${cliente.id_cliente}-Info" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nombre del cliente <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${cliente.nombre}" name="nombre" id="cliente_nombre_${cliente.id_cliente}" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Cliente" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Dirección </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value='${cliente.direccion}' name="direccion" id="cliente_direccion_${cliente.id_cliente}" class="form-control col-md-7 col-xs-12" placeholder="Dirección del Cliente" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> RFC <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value=${cliente.RFC} name="rfc" id="cliente_rfc_${cliente.id_cliente}" class="form-control col-md-7 col-xs-12" placeholder="RFC" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Tipo de Cliente <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="nat" id="nat_${cliente.id_cliente}" data-val="${cliente.nat}"> <option value="${cliente.nat}" disabled selected>Proveedor/Cliente</option> <option value="0">Proveedor</option> <option value="1">Cliente</option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Estado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="estado" data-val="${cliente.estado}" id="estado_${cliente.id_cliente}"> <option value="${cliente.estado}" disabled selected >Activo/Inactivo</option> <option value="ACTIVO">Activo</option> <option value="INACTIVO">Inactivo</option> </select> </div> </div> </div> </form> </div> <div class="modal-footer"> <button type="button" data-target=${cliente.id_cliente} class="btn btn-primary actualizarCliente">Guardar Cambios</button> </div> </div> </div> </div>`;
+
+        TablaClientes.row.add([cliente.nombre, cliente.direccion, cliente.RFC, cliente.estado, nat[cliente.nat], `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-client=${cliente.id_cliente} data-target="#modal-${cliente.id_cliente}"><span class="fa fa-edit"></span></button><button data-target="${cliente.id_cliente}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]);
+    });
+    $('#ModalesClientes').html(modales);
+    TablaClientes.draw();
+
+    $('.actualizarCliente').on('click', async function () {
+        let form = $(`#${$(this).data("target")}-Info`).serializeObject();
+        let row = TablaClientes.row($($($('#ClientesInfo').find(`[data-client="${$(this).data("target")}"]`)).parents('tr')));
+        form.id_cliente = $(this).data("target");
+        form.nat = $(`#nat_${$(this).data("target")}`).val() || $(`#nat_${$(this).data("target")}`).data("val");
+        form.estado = $('#estado_' + $(this).data("target")).val() || $('#estado_' + $(this).data("target")).data("val");
+        console.log(form)
+        let url = "http://localhost:3000/cliente/0";
+        let options = {
+            method: 'post',
+            body: JSON.stringify(form),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+        if (res.status == "200") {
+            $.notify(res.message, "success");
+            $(`#modal-${$(this).data("target")}`).modal("toggle");
+            TablaClientes.cell(row, 0).data(form.nombre);
+            TablaClientes.cell(row, 1).data(form.direccion);
+            TablaClientes.cell(row, 2).data(form.rfc);
+            TablaClientes.cell(row, 3).data(form.estado)
+            TablaClientes.cell(row, 4).data(nat[form.nat]);
+        } else if (res.status == "500") {
+            $.notify(res.message);
+        }
+    });
+    $('.eliminar').on('click', async function () {
+        let cliente = $(this).data("target");
+        let url = "http://localhost:3000/cliente/" + cliente;
+        let options = {
+            method: 'delete',
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+        if (res.status == "200") {
+            $.notify(res.message, "success");
+            TablaClientes.row($(this).parents('tr')).remove().draw();
+        } else if (res.status == "500") {
+            $.notify(res.message);
+        }
+
+
+    });
+    $('#registroCliente').on('click', async function () {
+        let form = $('#RegistrarClienteForm').serializeObject();
+        console.log(form);
+        let url = "http://localhost:3000/cliente/1";
+        let options = {
+            method: 'post',
+            body: JSON.stringify(form),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+        if (res.status == "200") {
+            $.notify(res.message, "success");
+        } else if (res.status == "500") {
+            $.notify(res.message);
+        }
+
+    });
+
+}
+async function initMovimientos() {
+    let mov = $('#MovimientosInfo').DataTable({
+        "createdRow": function (row, data) {
+            let info = JSON.parse(data[0]);
+            console.log(info);
+            $(row).attr("data-clasificacion", info.clasificacion);
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ]
+    });
+    let url = "http://localhost:3000/movimientos"
+    let pet = await fetch(url);
+    let movimientos = await pet.json();
+    let modales = "";
+    movimientos.forEach(movimiento => {
+        let fecha = movimiento.fecha.split("T")[0];
+        modales += `<div style="display:none" id="modal-${movimiento.id_movimiento}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Movimiento ${movimiento.id_movimiento} del ${movimiento.fecha}</h4> </div> <div class="modal-body"> <form id="${movimiento.id_movimiento}-Info" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Origen <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.proveedor}" data-prove="${movimiento.id_proveedor}" name="origen" id="${movimiento.id_movimiento}-proveedor" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Cliente Proveedor" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Destino </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value='${movimiento.destino || ""}' data-dest="${movimiento.id_destino}" name="destino" id="${movimiento.id_movimiento}-destino" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Cliente de Destino" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${(movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte}" name="parte" id="${movimiento.id_movimiento}-parte" class="form-control col-md-7 col-xs-12" placeholder="N° de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.descripcion}" name="desc" id="${movimiento.id_movimiento}-parte-desc" class="form-control col-md-7 col-xs-12" placeholder="Descripción de la Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Contenedor <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.id_contenedor || ""}" name="contenedor" id="${movimiento.id_movimiento}-contenedor" class="form-control col-md-7 col-xs-12" placeholder="N° de Contenedor" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Candado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.id_candado || ""}" name="contenedor" id="${movimiento.id_movimiento}-candado" class="form-control col-md-7 col-xs-12" placeholder="N° de Candado" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Fecha <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${fecha}" name="contenedor" id="${movimiento.id_movimiento}-fecha" class="form-control col-md-7 col-xs-12" placeholder="Fecha" /> </div> </div> </div> </form> </div> </div> </div> </div>`;
+
+        mov.row.add([`{"movimiento":"${movimiento.id_movimiento}","clasificacion":"${movimiento.clas}"}`, movimiento.proveedor, movimiento.destino || "", (movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte, movimiento.descripcion, fecha, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Detalles" data-target="#modal-${movimiento.id_movimiento}"><span class="fa fa-eye"></span></button>`]).draw();
+
+    });
+    $('#ModalesMovimientos').html(modales);
+    $('.ControlPrim').on('click change', function () {
+        $('#MovimientosInfo tbody tr').hide();
+        $(`[data-clasificacion="${$(this).data("clas")}"]`).show();
+        mov.page.len(-1).draw();
+        if ($(this).data("clas") == "Z") {
+            $('#MovimientosInfo tbody tr').show();
+            mov.page.len(10).draw();
+        }
+    });
+    init_daterangepicker()
+}
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {
 
@@ -523,3 +638,71 @@ async function initPartes() {
         return json;
     };
 })(jQuery);
+function init_daterangepicker() {
+    months: "Enero_Febrero_Marzo_Abril_Mayo_Junio_Julio_Agosto_Septiembre_Octubre_Noviembre_Diciembre".split("_"),
+        moment().locale('es', {
+            weekdays: "Dom_Lun_Mar_Mie_Jue_Vie_Sáb".split("_")
+        });
+    if ("undefined" != typeof $.fn.daterangepicker) {
+        console.log("init_daterangepicker");
+        var a = function (a, b, c) {
+            console.log(a.toISOString(), b.toISOString(), c),
+                $("#reportrange span").html(b.format("DD/MM/YYYY") + " - " + a.format("DD/MM/YYYY"))
+        }
+            , b = {
+                startDate: moment(),
+                showDropdowns: !0,
+                showWeekNumbers: !0,
+                timePicker: !1,
+                timePickerIncrement: 1,
+                timePicker12Hour: !0,
+                ranges: {
+                    Hoy: [moment(), moment()],
+                    Ayer: [moment().subtract(1, "days"), moment().subtract(1, "days")],
+                    "Últimos 7 días": [moment().subtract(6, "days"), moment()],
+                    "Últimos 30 días": [moment().subtract(29, "days"), moment()],
+                    "Este Mes": [moment().startOf("month"), moment().endOf("month")],
+                    "Mes Pasado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")]
+                },
+                opens: "left",
+                buttonClasses: ["btn btn-default"],
+                applyClass: "btn-small btn-primary",
+                cancelClass: "btn-small",
+                format: "MM/DD/YYYY",
+                separator: " a ",
+                locale: {
+                    applyLabel: "Terminar",
+                    cancelLabel: "Limpiar",
+                    fromLabel: "Desde",
+                    toLabel: "Hasta",
+                    customRangeLabel: "Personalizar",
+                    daysOfWeek: ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sáb"],
+                    monthNames: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+                    firstDay: 1
+                }
+            };
+        $("#reportrange span").html(moment().subtract(29, "days").format("DD/MM/YYYY") + " - " + moment().format("DD/MM/YYYY")),
+            $("#reportrange").daterangepicker(b, a),
+            $("#reportrange").on("show.daterangepicker", function () {
+                console.log("show event fired")
+            }),
+            $("#reportrange").on("hide.daterangepicker", function () {
+                console.log("hide event fired")
+            }),
+            $("#reportrange").on("apply.daterangepicker", function (a, b) {
+                console.log("apply event fired, start/end dates are " + b.startDate.format("DD/MM/YYYY") + " to " + b.endDate.format("DD/MM/YYYY"))
+            }),
+            $("#reportrange").on("cancel.daterangepicker", function (a, b) {
+                console.log("cancel event fired")
+            }),
+            $("#options1").click(function () {
+                $("#reportrange").data("daterangepicker").setOptions(b, a)
+            }),
+            $("#options2").click(function () {
+                $("#reportrange").data("daterangepicker").setOptions(optionSet2, a)
+            }),
+            $("#destroy").click(function () {
+                $("#reportrange").data("daterangepicker").remove()
+            })
+    }
+}

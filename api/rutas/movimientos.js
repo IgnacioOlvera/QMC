@@ -4,14 +4,14 @@ var api = express.Router();
 
 //Regresa historial de movimientos
 api.get('/movimientos', function (req, res) {
-    let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
+    let sql = `select if (id_destino is null, 'I' ,'O') clas ,m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
         else res.send(rows);
     });
 });
-//Regresa hostorial de Entradas
-api.get('/entradas', function (req, res) {
+//Regresa historial de Entradas
+api.get('/MoveEntradas', function (req, res) {
     let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino) destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is null order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
@@ -19,7 +19,7 @@ api.get('/entradas', function (req, res) {
     });
 });
 //Regresa Historial de Salidas
-api.get('/salidas', function (req, res) {
+api.get('/MoveSalidas', function (req, res) {
     let sql = `select m.*, a.nombre 1almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)   destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is not null order by fecha;`
     con.query(sql, function (err, rows) {
         if (err) throw err

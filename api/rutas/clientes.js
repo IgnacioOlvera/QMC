@@ -10,7 +10,7 @@ api.get('/cliente/:id?', function (req, res) {
             if (err) throw err
             else res.send(rows);
         });
-    //Seleccionar todos los clientes
+        //Seleccionar todos los clientes
     } else {
         con.query("select * from clientes", function (error, rows) {
             if (error) throw error
@@ -27,7 +27,7 @@ api.get('/clienteNat/:id?', function (req, res) {
             if (err) throw err
             else res.send(rows);
         });
-    //Seleccionar todos los clientes
+        //Seleccionar todos los clientes
     } else {
         con.query("select * from clientes", function (error, rows) {
             if (error) throw error
@@ -40,47 +40,46 @@ api.post('/cliente/:b', function (req, res) {
     let cliente = req.body;
     let sql = "";
     let b = req.params.b;//Bandera para identificar si es actualización o inserción
-    if (cliente != null&&(b==0||b==1)) {
+    if (cliente != null && (b == 0 || b == 1)) {
         let id_cliente = cliente.id_cliente,
-            nombre = cliente.nombre,
-            direccion = cliente.direccion,
-            rfc = cliente.RFC,
-            id_servicio = cliente.id_servicio,
-            estado = cliente.estado;
-        
-        if (id_cliente != null && nombre != null && rfc != null, id_servicio != null) {
+            nombre = cliente.nombre || null,
+            direccion = cliente.direccion || null,
+            rfc = (cliente.rfc == "") ? null : `'${cliente.rfc}'`,
+            estado = cliente.estado || null,
+            nat = cliente.nat;
+        if (id_cliente != null && nombre != null && rfc != null, estado != null, nat != null) {
             //Actuazlición de cliente
             if (b == 0) {
-                sql = `update clientes set nombre='${nombre}',direccion='${direccion}',rfc='${rfc}',id_servicio=${id_servicio},estado='${estado}' where id_cliente=${id_cliente}`;
+                sql = `update clientes set nombre='${nombre}',direccion='${direccion}',rfc=${rfc},estado='${estado}',nat=${nat} where id_cliente=${id_cliente}`;
                 con.query(sql, function (err) {
                     if (err) throw err
                     else
-                        res.status(200).send({ message: 'Cliente Editado Correctamente' })
+                        res.status(200).send({ message: 'Cliente Editado Correctamente', status: "200" })
                 });
             }
             else if (b == 1) {//Inserción de Cliente
-                sql = `insert into clientes values(null,'${nombre}','${direccion}','${rfc}',${id_servicio},'${estado}')`;
+                sql = `insert into clientes values(null,'${nombre}','${direccion}',${rfc},null,'${estado}',${nat})`;
                 con.query(sql, function (err) {
-                    if (err) throw err
+                    if (err) throw err//res.send({ message: 'Ocurrió un error SQL', status: "500" });
                     else
-                        res.status(200).send({ message: 'Cliente Registrado Correctamente' })
+                        res.status(200).send({ message: 'Cliente Registrado Correctamente', status: "200" })
                 });
             }
         } else {
-            res.send({ message: 'Falta Proporcionar Datos Obligatorios' });
+            res.send({ message: 'Falta Proporcionar Datos Obligatorios', status: "500" });
         }
     } else {
-        res.send({ message: 'Ocurrió un error' });
+        res.send({ message: 'Ocurrió un error', status: "500" });
     }
 });
 //Eliminar Cliente
 api.delete('/cliente/:id', function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
-        con.query(`delete from cliente where id_cliente=${id}`, function (err) {
+        con.query(`delete from clientes where id_cliente=${id}`, function (err) {
             if (err) throw err
             else
-                res.status(200).send({ message: 'Parte eliminada correctamente' })
+                res.status(200).send({ message: 'Parte eliminada correctamente', status: "200" })
         });
 
     }
