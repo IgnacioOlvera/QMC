@@ -477,7 +477,6 @@ async function initClientes() {
         form.id_cliente = $(this).data("target");
         form.nat = $(`#nat_${$(this).data("target")}`).val() || $(`#nat_${$(this).data("target")}`).data("val");
         form.estado = $('#estado_' + $(this).data("target")).val() || $('#estado_' + $(this).data("target")).data("val");
-        console.log(form)
         let url = "http://localhost:3000/cliente/0";
         let options = {
             method: 'post',
@@ -536,19 +535,19 @@ async function initClientes() {
     });
 
 }
+var mov = $('#MovimientosInfo').DataTable({
+    "createdRow": function (row, data) {
+        let info = JSON.parse(data[0]);
+        $(row).attr("data-clasificacion", info.clasificacion);
+    }, "columnDefs": [
+        {
+            "targets": [0],
+            "visible": false
+        }
+    ]
+});
 async function initMovimientos() {
-    let mov = $('#MovimientosInfo').DataTable({
-        "createdRow": function (row, data) {
-            let info = JSON.parse(data[0]);
-            console.log(info);
-            $(row).attr("data-clasificacion", info.clasificacion);
-        }, "columnDefs": [
-            {
-                "targets": [0],
-                "visible": false
-            }
-        ]
-    });
+    
     let url = "http://localhost:3000/movimientos"
     let pet = await fetch(url);
     let movimientos = await pet.json();
@@ -570,7 +569,132 @@ async function initMovimientos() {
             mov.page.len(10).draw();
         }
     });
-    init_daterangepicker()
+    init_daterangepicker();
+}
+async function initContactos() {
+    let p = await fetch('http://localhost:3000/cliente');
+    let clientes = await p.json();
+    let selectCliente = '<select class="form-control" name="cliente" id="NuevoContactoCliente">';
+    selectCliente += '<option value="0" selected disabled> Selección de cliente...</option>';
+    clientes.forEach(cliente => {
+        selectCliente += `<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`;
+    });
+    selectCliente += "</select>";
+    $('#SeleccionClient').html(selectCliente);
+
+    let info = $('#ContactosInfo').DataTable({
+        "createdRow": function (row, data) {
+            let info = JSON.parse(data[0]);
+            $(row).attr({
+                "data-contacto": info.id_contacto,
+                "data-cliente": info.id_cliente
+            });
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ]
+    });
+    let url = "http://localhost:3000/contacto";
+    let pet = await fetch(url);
+    let contactos = await pet.json();
+    let modales = "";
+    let cliente = ""
+    contactos.forEach(contacto => {
+        cliente = `<select class="form-control" name="cliente" id="${contacto.id_contacto}-cliente">`;
+        cliente += `<option value="${contacto.id_cliente}" selected> Selección de cliente...</option>`;
+        clientes.forEach(client => {
+            cliente += `<option value='${client.id_cliente}'>${client.nombre}</option>`;
+        });
+        cliente += "</select>";
+        modales += `<div style="display:none" id="modal-${contacto.id_contacto}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${contacto.nombre} de ${contacto.cliente}</h4> </div> <div class="modal-body"> <form id="${contacto.id_contacto}-Info" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nombre <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.nombre}" name="nombre" id="${contacto.id_contacto}-nombre" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Contacto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Teléfono </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value='${contacto.telefono}' name="telefono" id="${contacto.id_contacto}-telefono" class="form-control col-md-7 col-xs-12" placeholder="Teléfono de Contacto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Extensión <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.ext || ''}" name="ext" id="${contacto.id_contacto}-ext" class="form-control col-md-7 col-xs-12" placeholder="Ext." /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Correo <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.correo}" name="correo" id="${contacto.id_contacto}-correo" class="form-control col-md-7 col-xs-12" placeholder="Correo" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cliente <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> ${cliente} </div> </div> </div> </form>  <div class="modal-footer"> <button type="button" data-target="#${contacto.id_contacto}-Info" data-modal="#modal-${contacto.id_contacto}" data-contacto="${contacto.id_contacto}" class="btn btn-primary actualizarContacto">Guardar Cambios</button> </div> </div> </div> </div> </div>`;
+
+        info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}"}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+    });
+
+    $('#ModalesContactos').html(modales);
+
+    $('#GuardarContacto').on('click', async function () {
+        let form = $('#AgregarContactoForm').serializeObject();
+        let options = {
+            method: 'post',
+            body: JSON.stringify(form),
+            headers: { "Content-Type": "application/json" }
+        }
+        let url = "http://localhost:3000/contacto/1";
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+        if (form.nombre != "" || null && telefono != "" || null && correo != "" || null && form.cliente == 0) {
+            if (res.status == "200") {
+                $.notify(res.message, "success");
+                $('#AgregarContactoForm')[0].reset();
+                info.clear();
+                $('#AgregarContactoModal').modal('toggle');
+                url = "http://localhost:3000/contacto";
+                pet = await fetch(url);
+                let contactos = await pet.json();
+                contactos.forEach(contacto => {
+                    info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}"}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+                });
+
+            } else if (res.status == "500") {
+                $.notify(res.message);
+            }
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
+        }
+
+    });
+
+    $('.actualizarContacto').on('click', async function () {
+        let form = $($(this).data('target')).serializeObject();
+        form.id_contacto = $(this).data("contacto");
+        let options = {
+            method: 'post',
+            body: JSON.stringify(form),
+            headers: { "Content-Type": "application/json" }
+        }
+        let url = "http://localhost:3000/contacto/0";
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+        if (form.nombre != "" || null && telefono != "" || null && correo != "" || null && form.cliente == 0) {
+            if (res.status == "200") {
+                $.notify(res.message, "success");
+                $($(this).data('target'))[0].reset();
+                info.clear();
+                $($(this).data("modal")).modal('toggle');
+                url = "http://localhost:3000/contacto";
+                pet = await fetch(url);
+                let contactos = await pet.json();
+                contactos.forEach(contacto => {
+                    info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}"}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+                });
+
+            } else if (res.status == "500") {
+                $.notify(res.message);
+            }
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
+        }
+    });
+
+    $('.eliminar').on('click', async function () {
+        let url = `http://localhost:3000/contacto/${$(this).data("target")}`;
+        let options = {
+            method: 'delete',
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+
+        if (res.status == "200") {
+            $.notify(res.message, "success");
+            info.row($(this).parents('tr')).remove().draw();
+        } else if (res.status == "500") {
+            $.notify(res.message);
+        }
+    });
 }
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {
@@ -639,15 +763,10 @@ async function initMovimientos() {
     };
 })(jQuery);
 function init_daterangepicker() {
-    months: "Enero_Febrero_Marzo_Abril_Mayo_Junio_Julio_Agosto_Septiembre_Octubre_Noviembre_Diciembre".split("_"),
-        moment().locale('es', {
-            weekdays: "Dom_Lun_Mar_Mie_Jue_Vie_Sáb".split("_")
-        });
     if ("undefined" != typeof $.fn.daterangepicker) {
-        console.log("init_daterangepicker");
         var a = function (a, b, c) {
             console.log(a.toISOString(), b.toISOString(), c),
-                $("#reportrange span").html(b.format("DD/MM/YYYY") + " - " + a.format("DD/MM/YYYY"))
+                $("#reportrange span").html(a.format("DD/MMMM/YYYY") + " - " + b.format("DD/MMMM/YYYY"))
         }
             , b = {
                 startDate: moment(),
@@ -681,7 +800,7 @@ function init_daterangepicker() {
                     firstDay: 1
                 }
             };
-        $("#reportrange span").html(moment().subtract(29, "days").format("DD/MM/YYYY") + " - " + moment().format("DD/MM/YYYY")),
+        $("#reportrange span").html(moment().subtract(29, "days").format("DD/MMMM/YYYY") + " - " + moment().format("DD/MMMM/YYYY")),
             $("#reportrange").daterangepicker(b, a),
             $("#reportrange").on("show.daterangepicker", function () {
                 console.log("show event fired")
@@ -689,8 +808,34 @@ function init_daterangepicker() {
             $("#reportrange").on("hide.daterangepicker", function () {
                 console.log("hide event fired")
             }),
-            $("#reportrange").on("apply.daterangepicker", function (a, b) {
-                console.log("apply event fired, start/end dates are " + b.startDate.format("DD/MM/YYYY") + " to " + b.endDate.format("DD/MM/YYYY"))
+            $("#reportrange").on("apply.daterangepicker", async function (a, b) {
+                let fecha_inicio = b.startDate.format("DD/MM/YYYY");
+                let fecha_final = b.endDate.format("DD/MM/YYYY");
+                let data = {};
+                console.log("apply event fired, start/end dates are " + b.startDate.format("DD/MM/YYYY") + " to " + b.endDate.format("DD/MM/YYYY"));
+                if (fecha_inicio == fecha_final) {
+                   data.fecha = b.startDate.format("DD/MM/YYYY")
+
+                } else {
+                    data.fecha_inicio = b.startDate.format("DD/MM/YYYY");
+                    data.fecha_final = b.endDate.format("DD/MM/YYYY");
+                }
+                let url = "http://localhost:3000/movimientosFecha"
+                let options = {
+                    method: 'post',
+                    body: JSON.stringify(data),
+                    headers: { "Content-Type": "application/json" }
+                }
+                let pet = await fetch(url, options);
+                let movimientos = await pet.json();
+                mov.clear();
+                movimientos.forEach(movimiento => {
+                    let fecha = movimiento.fecha.split("T")[0];
+                    mov.row.add([`{"movimiento":"${movimiento.id_movimiento}","clasificacion":"${movimiento.clas}"}`, movimiento.proveedor, movimiento.destino || "", (movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte, movimiento.descripcion, fecha, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Detalles" data-target="#modal-${movimiento.id_movimiento}"><span class="fa fa-eye"></span></button>`]).draw();
+                });
+
+
+
             }),
             $("#reportrange").on("cancel.daterangepicker", function (a, b) {
                 console.log("cancel event fired")
