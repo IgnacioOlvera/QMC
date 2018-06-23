@@ -10,26 +10,46 @@ api.get('/movimientos', function (req, res) {
         else res.send(rows);
     });
 });
+api.get('/SemanalRepo', function (req, res) {
+
+    let sql = `select (select count(*) from movimientos_almacenes where id_destino is not null and week(fecha) = week(m.fecha))envios, (select count(*) from movimientos_almacenes where id_destino is null and week(fecha) = week(m.fecha)) recibos, date_format(fecha, '%d/%m/%Y') FechaMov, date_format(DATE_SUB(fecha, INTERVAL DAYOFWEEK(fecha) - 1 DAY), '%d/%m/%Y') inicio, date_format(DATE_ADD(fecha, INTERVAL 7 - DAYOFWEEK(fecha) DAY), '%d/%m/%Y') final from movimientos_almacenes m group by week(fecha);`;
+
+    con.query(sql, function (err, rows) {
+        if (err) throw err
+        else res.send(rows);
+    });
+
+});
+api.get('/MensualRepo', function (req, res) {
+    con.query("SET lc_time_names = 'es_ES';", function (err) {
+        if (err) throw err
+        else {
+            let sql = `select (select count(*) from movimientos_almacenes where id_destino is not null and month(fecha) = month(m.fecha)) envios, (select count(*) from movimientos_almacenes where id_destino is null and month(fecha) = month(m.fecha))     recibos, MONTHNAME(fecha)                                                 mes from movimientos_almacenes m group by month(fecha);`
+            con.query(sql, function (err, rows) {
+                if (err) throw err
+                else res.send(rows);
+            });
+        }
+    });
+
+});
 //Movimientos dentro de fechas
 api.post('/movimientosFecha', function (req, res) {
     let fechas = req.body;
     if (fechas.fecha_inicio && fechas.fecha_final) {
-        let sql = `select if (id_destino is null, 'I' ,'O') clas ,m.*,(select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m inner join partes p on m.no_parte = p.no_parte and date_format(fecha,'%d/%m/%Y') between date_format(str_to_date('${fechas.fecha_inicio}','%d/%m/%Y'),'%d/%m/%Y') and date_format(str_to_date('${fechas.fecha_final}','%d/%m/%Y'),'%d/%m/%Y') order by fecha;`;
-        con.query(sql, function (err, rows) {
-            if (err) throw err
-            else res.send(rows);
-        });
-        console.log(sql);
+        let sql = `select id_movimiento from movimientos_almacenes where date_format(fecha,'%Y-%m-%d') between str_to_date('${fechas.fecha_inicio}', '%d/%m/%Y') and str_to_date('${fechas.fecha_final}', '%d/%m/%Y')`;
 
-    } else if (fechas.fecha) {
-        let sql = `select if (id_destino is null, 'I' ,'O') clas ,m.*, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m inner join partes p on m.no_parte = p.no_parte and date_format(fecha,'%d/%m/%Y') = date_format(str_to_date('${fechas.fecha}','%d/%m/%Y'),'%d/%m/%Y')  order by fecha;`;
         con.query(sql, function (err, rows) {
             if (err) throw err
             else res.send(rows);
         });
-        console.log(sql);
+    } else if (fechas.fecha) {
+        let sql = `select id_movimiento from movimientos_almacenes where date_format(fecha,'%Y-%m-%d') = str_to_date('${fechas.fecha}', '%d/%m/%Y')`;
+        con.query(sql, function (err, rows) {
+            if (err) throw err
+            else res.send(rows);
+        });
     }
-    
 });
 
 //Regresa historial de Entradas
@@ -40,6 +60,7 @@ api.get('/MoveEntradas', function (req, res) {
         else res.send(rows);
     });
 });
+
 //Regresa Historial de Salidas
 api.get('/MoveSalidas', function (req, res) {
     let sql = `select m.*, a.nombre 1almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)   destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is not null order by fecha;`
@@ -50,7 +71,6 @@ api.get('/MoveSalidas', function (req, res) {
 });
 
 //Registrar entrada de piezas
-
 api.post('/entradas', function (req, res) {
     let f = new Date();
     cad = f.getHours() + ":" + ("0" + f.getMinutes()).slice(-2) + ":" + f.getSeconds();

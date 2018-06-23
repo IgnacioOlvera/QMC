@@ -1,3 +1,153 @@
+async function initInicio() {
+    let semanal = echarts.init(document.getElementById('semanal'));
+    let mensual=echarts.init(document.getElementById('mensual'));
+    let url = "http://localhost:3000/SemanalRepo";
+    let entradas = [], salidas = [], categorias = [];
+    let entr = [], sal = [], cat = [];
+    let pet = await fetch(url);
+    let result = await pet.json();
+    result.forEach(res => {
+        entradas.push(parseInt(res.recibos));
+        salidas.push(parseInt(res.envios));
+        categorias.push(`${res.inicio} a ${res.final}`)
+    });
+
+    url = "http://localhost:3000/MensualRepo";
+    pet = await fetch(url);
+    result = await pet.json();
+    result.forEach(res=>{
+        entr.push(parseInt(res.recibos));
+        sal.push(parseInt(res.envios));
+        cat.push(res.mes)
+    });
+    // specify chart configuration item and data
+    semanal.setOption({
+        title: {
+            text: 'Entradas y Salidas Semanales'
+        }, tooltip: {
+            trigger: 'axis'
+        },
+        toolbox: {
+            feature: {
+                dataView: {
+                    show: true, readOnly: false,
+                    title: "Ver Info",
+                    lang: [
+                        "Información en Texto Plano",
+                        "Cerrar",
+                        "Actualizar"
+                    ]
+                },
+                magicType: { show: true, type: 'line' },
+                saveAsImage: { show: true, title: "Descargar Imágen" }
+            }
+        },
+        legend: {
+            data: ['Entradas', 'Salidas']
+        },
+        xAxis: [
+            {
+                type: 'category',
+                data: categorias,
+                axisPointer: {
+                    type: 'shadow'
+                }
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                name: 'Cantidad',
+                min: 0,
+                max: 25,
+                interval: 5
+            }
+        ],
+        series: [
+            {
+                name: 'Entradas',
+                type: 'bar',
+                data: entradas,
+                label: {
+                    show: true,
+                    position: 'inside',
+                    fontStyle: 'italic'
+                }
+            },
+            {
+                name: 'Salidas',
+                type: 'bar',
+                data: salidas,
+                label: {
+                    show: true
+                }
+            }
+        ]
+    });
+    mensual.setOption({
+        title: {
+            text: 'Entradas y Salidas Mensuales'
+        }, tooltip: {
+            trigger: 'axis'
+        },
+        toolbox: {
+            feature: {
+                dataView: {
+                    show: true, readOnly: false,
+                    title: "Ver Info",
+                    lang: [
+                        "Información en Texto Plano",
+                        "Cerrar",
+                        "Actualizar"
+                    ]
+                },
+                magicType: { show: true, type: 'line' },
+                saveAsImage: { show: true, title: "Descargar Imágen" }
+            }
+        },
+        legend: {
+            data: ['Entradas', 'Salidas']
+        },
+        xAxis: [
+            {
+                type: 'category',
+                data: cat,
+                axisPointer: {
+                    type: 'shadow'
+                }
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                name: 'Cantidad',
+                min: 0,
+                max: 25,
+                interval: 5
+            }
+        ],
+        series: [
+            {
+                name: 'Entradas',
+                type: 'bar',
+                data: entr,
+                label: {
+                    show: true,
+                    position: 'inside',
+                    fontStyle: 'italic'
+                }
+            },
+            {
+                name: 'Salidas',
+                type: 'bar',
+                data: sal,
+                label: {
+                    show: true
+                }
+            }
+        ]
+    });
+}
 //Función para incializar en la sección de recibo
 async function initRecibo() {
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
@@ -538,7 +688,7 @@ async function initClientes() {
 var mov = $('#MovimientosInfo').DataTable({
     "createdRow": function (row, data) {
         let info = JSON.parse(data[0]);
-        $(row).attr("data-clasificacion", info.clasificacion);
+        $(row).attr({ "data-clasificacion": info.clasificacion, "data-id": info.movimiento });
     }, "columnDefs": [
         {
             "targets": [0],
@@ -547,7 +697,7 @@ var mov = $('#MovimientosInfo').DataTable({
     ]
 });
 async function initMovimientos() {
-    
+
     let url = "http://localhost:3000/movimientos"
     let pet = await fetch(url);
     let movimientos = await pet.json();
@@ -814,7 +964,7 @@ function init_daterangepicker() {
                 let data = {};
                 console.log("apply event fired, start/end dates are " + b.startDate.format("DD/MM/YYYY") + " to " + b.endDate.format("DD/MM/YYYY"));
                 if (fecha_inicio == fecha_final) {
-                   data.fecha = b.startDate.format("DD/MM/YYYY")
+                    data.fecha = b.startDate.format("DD/MM/YYYY")
 
                 } else {
                     data.fecha_inicio = b.startDate.format("DD/MM/YYYY");
@@ -826,15 +976,14 @@ function init_daterangepicker() {
                     body: JSON.stringify(data),
                     headers: { "Content-Type": "application/json" }
                 }
+
                 let pet = await fetch(url, options);
                 let movimientos = await pet.json();
-                mov.clear();
+                $('#MovimientosInfo tbody tr').hide();
                 movimientos.forEach(movimiento => {
-                    let fecha = movimiento.fecha.split("T")[0];
-                    mov.row.add([`{"movimiento":"${movimiento.id_movimiento}","clasificacion":"${movimiento.clas}"}`, movimiento.proveedor, movimiento.destino || "", (movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte, movimiento.descripcion, fecha, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Detalles" data-target="#modal-${movimiento.id_movimiento}"><span class="fa fa-eye"></span></button>`]).draw();
+                    $(`[data-id="${movimiento.id_movimiento}"]`).show();
                 });
-
-
+                mov.page.len(-1).draw();
 
             }),
             $("#reportrange").on("cancel.daterangepicker", function (a, b) {
