@@ -1,7 +1,5 @@
 var con = require('./conexion.js');
 var app = require('./app');
-var http = require('http');
-
 
 con.connect(function (err) {
     if (err) throw err
