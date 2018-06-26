@@ -1,11 +1,10 @@
 var con = require('../conexion.js');
 var express = require('express');
-var xl = require('excel4node');
 var api = express.Router();
 
 //Regresa historial de movimientos
 api.get('/movimientos', function (req, res) {
-    let sql = `select if (id_destino is null, 'I' ,'O') clas ,m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
+    let sql = `select if (id_destino is null, 'I' ,'O') clas ,date_format(m.fecha,'%d/%m/%Y') fechaf,m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
         else res.send(rows);
@@ -35,81 +34,7 @@ api.get('/MensualRepo', function (req, res) {
 
 });
 
-api.get('/excel4node', function (req, res) {
-    // Create a new instance of a Workbook class
-    var wb = new xl.Workbook();
-    var style = {
-        border: { // §18.8.4 border (Border)
-            left: {
-                style: "medium", //§18.18.3 ST_BorderStyle (Border Line Styles) ['none', 'thin', 'medium', 'dashed', 'dotted', 'thick', 'double', 'hair', 'mediumDashed', 'dashDot', 'mediumDashDot', 'dashDotDot', 'mediumDashDotDot', 'slantDashDot']
-                color: "#000000" // HTML style hex value
-            },
-            right: {
-                style: "medium",
-                color: "#000000"
-            },
-            top: {
-                style:"medium",
-                color:"#000000"
-            },
-            bottom: {
-                style: "medium",
-                color: "#000000"
-            }
-        }
-    }
-    // Add Worksheets to the workbook
-    var ws = wb.addWorksheet('Sheet 1');
-    ws.cell(1, 1).string('My simple string');
-    ws.cell(1, 2).number(5);
-    ws.cell(1, 3).formula('B1 * 10');
-    ws.cell(1, 4).date(new Date());
-    ws.cell(1, 5).link('http://iamnater.com');
-    ws.cell(1, 6).bool(true);
 
-    ws.cell(2, 4, 2, 9, true).string('One big merged cell').style(style);
-    ws.cell(3, 1, 3, 6).number(1); // All 6 cells set to number 1
-
-    var complexString = [
-        'Workbook default font String\n',
-        {
-            bold: true,
-            underline: true,
-            italic: true,
-            color: 'FF0000',
-            size: 18,
-            name: 'Courier',
-            value: 'Hello'
-        },
-        ' World!',
-        {
-            color: '000000',
-            underline: false,
-            name: 'Arial',
-            vertAlign: 'subscript'
-        },
-        ' All',
-        ' these',
-        ' strings',
-        ' are',
-        ' black subsript,',
-        {
-            color: '0000FF',
-            value: '\nbut',
-            vertAlign: 'baseline'
-        },
-        ' now are blue'
-    ];
-    ws.cell(4, 1).string(complexString);
-    ws.cell(5, 1).string('another simple string').style({ font: { name: 'Helvetica' } });;
-
-    wb.write('C:/Users/Ignacio Olvera/Desktop/Excel.xlsx', function (err) {
-        if (err) throw err
-        else {
-            res.send("ok");
-        }
-    });
-});
 //Movimientos dentro de fechas
 api.post('/movimientosFecha', function (req, res) {
     let fechas = req.body;

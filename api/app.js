@@ -11,6 +11,7 @@ var rutas_servicios = require('./rutas/servicios.js');
 var rutas_contactos = require('./rutas/contactos.js');
 var rutas_movimientos = require('./rutas/movimientos.js');
 var rutas_vistas = require('./rutas/views.js');
+var rutas_archivos = require('./rutas/archivos.js');
 
 var app = express();
 app.use(function (req, res, next) {
@@ -35,8 +36,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
-var publicPath = path.join(__dirname,'../client'); //path.join(__dirname, 'public'); también puede ser una opción
-var publicImages = path.join(__dirname,'../client/production/images');
+var publicPath = path.join(__dirname, '../client'); //path.join(__dirname, 'public'); también puede ser una opción
+var publicImages = path.join(__dirname, '../client/production/images');
 // Para que los archivos estaticos queden disponibles.
 app.use(express.static(publicPath));
 app.use(express.static(publicImages));
@@ -48,5 +49,6 @@ app.use(rutas_servicios);
 app.use(rutas_contactos);
 app.use(rutas_movimientos);
 app.use(rutas_vistas);
+app.use(rutas_archivos);
 
 module.exports = app;
