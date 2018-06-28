@@ -148,7 +148,9 @@ api.post('/salidas', function (req, res) {
         fecha = salida.fecha || null,
         secuencia = salida.secuencia || null,
         peso = salida.peso || null,
-        nota = salida.id_nota || null;
+        nota = salida.id_nota || null,
+        candado = (salida.candado=="")?null:`'${salida.candado}'`,
+        contenedor = (salida.contenedor=="")?null:`'${salida.contenedor}'`;
     consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select count(*) from costales),(select count(*)-${cantidad} from costales),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,null,null,'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia-${cantidad} where no_parte=${parte}`, `delete from costales where secuencia='${secuencia}'`];
 
     if (salida != null) {
@@ -173,7 +175,7 @@ api.post('/salidas', function (req, res) {
                 });
 
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia-${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,null,null,null,null,null)`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia-${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,null)`;
                 con.query(sql, function (err) {
                     if (err) res.send({ message: 'Ocurrió un error SQL', status: "500" });
                     else {

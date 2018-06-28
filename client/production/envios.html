@@ -54,48 +54,48 @@
                         <div class="menu_section">
                             <h3>General</h3>
                             <ul class="nav side-menu">
-                                    <li>
-                                        <a href='/inicio'>
-                                            <i class="fa fa-home"></i> Inicio
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href='/recibo'>
-                                            <i class="fa fa-mail-reply"></i> Recibos
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href='/envios'>
-                                            <i class="fa fa-mail-forward"></i> Envíos
-                                        </a>
-                                    </li>
-    
-                                    <li>
-                                        <a href='/partesPag'>
-                                            <i class="fa fa-plug"></i> Partes
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href='/clientesPag'>
-                                            <i class="fa fa-industry"></i> Clientes
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href='/movimientosPag'>
-                                            <i class="fa fa-exchange"></i> Movimientos
-                                        </a href='/envios'>
-                                    </li>
-                                    <li>
-                                        <a href='/contactosPag'>
-                                            <i class="fa fa-user"></i> Contactos
-                                        </a href='/envios'>
-                                    </li>
-                                    <li>
-                                        <a href='/reportes'>
-                                            <i class="fa fa-line-chart"></i> Reportes
-                                        </a>
-                                    </li>
-                                </ul>
+                                <li>
+                                    <a href='/inicio'>
+                                        <i class="fa fa-home"></i> Inicio
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href='/recibo'>
+                                        <i class="fa fa-mail-reply"></i> Recibos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href='/envios'>
+                                        <i class="fa fa-mail-forward"></i> Envíos
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href='/partesPag'>
+                                        <i class="fa fa-plug"></i> Partes
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href='/clientesPag'>
+                                        <i class="fa fa-industry"></i> Clientes
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href='/movimientosPag'>
+                                        <i class="fa fa-exchange"></i> Movimientos
+                                    </a href='/envios'>
+                                </li>
+                                <li>
+                                    <a href='/contactosPag'>
+                                        <i class="fa fa-user"></i> Contactos
+                                    </a href='/envios'>
+                                </li>
+                                <li>
+                                    <a href='/reportes'>
+                                        <i class="fa fa-line-chart"></i> Reportes
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                     <!-- /sidebar menu -->
@@ -168,6 +168,25 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">Candado
+                                                        <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                                        <input type=text name='candado' class="form-control" placeholder="ID de Candado" id="candado_envio" />
+                                                    </div>
+                                                </div>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12">Contenedor
+                                                        <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                                        <input type=text name='contenedor' class="form-control" placeholder="ID de Contenedor" id="contenedor_envio" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -199,7 +218,9 @@
                                             <div class="form-group">
                                                 <div class="col-md-6 col-md-offset-3">
                                                     <button id="terminarRecibo" type="submit" class="btn btn-danger">Terminar</button>
+                                                    <button id="generarDocumentacion" disabled type="submit" class="btn btn-danger" title="Bill Of Landing, Packing List y Order Sheet">Generar Documentación</button>
                                                 </div>
+                                                
                                             </div>
                                         </center>
                                     </div>

@@ -1,6 +1,6 @@
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
-    let mensual=echarts.init(document.getElementById('mensual'));
+    let mensual = echarts.init(document.getElementById('mensual'));
     let url = "http://localhost:3000/SemanalRepo";
     let entradas = [], salidas = [], categorias = [];
     let entr = [], sal = [], cat = [];
@@ -15,7 +15,7 @@ async function initInicio() {
     url = "http://localhost:3000/MensualRepo";
     pet = await fetch(url);
     result = await pet.json();
-    result.forEach(res=>{
+    result.forEach(res => {
         entr.push(parseInt(res.recibos));
         sal.push(parseInt(res.envios));
         cat.push(res.mes)
@@ -277,7 +277,7 @@ async function initRecibo() {
     });
 }
 async function initEnvios() {
-    let fifoColors = ['BCABA0', 'ADCC78', '16991F', '569900', 'B11B07', 'FF0008', 'E00F47', 'CE5668', 'C47B97', 'CC7695', '522445', '4A5071'];//Colores FIFO de QMC
+    let BLinfo = {};
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
     let count = 1;
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
@@ -354,41 +354,85 @@ async function initEnvios() {
     });
 
     $('#terminarRecibo').on('click', async function () {//Enviar todas las filas para realzar movimientos en la base de datos.
+        let partesEnvio = [];
         let cantidades = t.$('.cantidad').serialize();//Obtener una cadena con todos los valores de los inputs de cantidades.
         let destino = $('#in_clienteDest').val();
         cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");//Quitar de la cadena cant_parte y separarlos por &
-        t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
-            if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
-                let a = $("#form1").serializeObject();//convertir los elementos del form en un objeto json.
-                let data = this.data();//data de la fila
-                a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
-                a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
-                a.id_destino = destino;
-                a = JSON.stringify(a);//Convertir a cadena el json
-                let options = {//opciones para la petición
-                    method: 'POST',
-                    body: a,
-                    headers: { "Content-Type": "application/json" }
-                }
-                let c = await fetch('http://localhost:3000/salidas', options);//petición
-                let res = await c.json();
-                t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
-                t.$('label').text('0');//regresar las cantidades a sus valores iniciales
-                if (destino == 0 || a.id_proveedor == 0) {
-                    $.notify("Falta llenar campos obligatorios  (*)");
-                } else {
-                    if (res.status == 200) {
-                        $.notify(res.message, "success");//mensaje del backend
-                        count = 0;
-                    } else {
-                        $.notify(res.message);
-                        count = 0;
+        let a = $("#form1").serializeObject();//convertir los elementos del form en un objeto json.
+        a.id_destino = destino;
+        BLinfo.destino = destino;
+        BLinfo.candado = a.candado;
+        BLinfo.contenedor = a.contenedor;
+        BLinfo.fecha = a.fecha;
+
+        let direc = `http://localhost:3000/cliente/${destino}`;
+        let f = await fetch(direc);
+        let i = await f.json();
+        console.log(i);
+        BLinfo.cliente = JSON.parse(JSON.stringify(i));
+
+        if (destino == 0 || a.id_proveedor == 0) {
+            $.notify("Falta llenar campos obligatorios  (*)");
+        } else {
+            t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
+                if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
+                    a = $("#form1").serializeObject();
+                    let data = this.data();//data de la fila
+                    a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
+                    a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
+                    a = JSON.stringify(a);//Convertir a cadena el json
+                    let options = {//opciones para la petición
+                        method: 'POST',
+                        body: a,
+                        headers: { "Content-Type": "application/json" }
+                    }
+                    let c = await fetch('http://localhost:3000/salidas', options);//petición
+                    let res = await c.json();
+                    t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
+                    t.$('label').text('0');//regresar las cantidades a sus valores iniciales
+                    if (destino != 0 || a.id_proveedor != 0) {
+                        if (res.status == 200) {
+                            $.notify(res.message, "success");//mensaje del backend
+                            let url = `http://localhost:3000/parte/${data[0]}`;
+                            let p = await fetch(url);
+                            let r = await p.json();
+                            let part = {};
+                            part.no_parte = r[0].no_parte;
+                            part.cant = cantidades[rowIdx];
+                            part.descripcion = r[0].descripcion;
+                            part.cant_x_caja = r[0].cant_x_caja;
+                            part.cant_x_pallet = r[0].cant_x_pallet;
+                            partesEnvio.push(part);
+                            count = 0;
+                        } else {
+                            $.notify(res.message);
+                            count = 0;
+                        }
                     }
                 }
-            }
-        });
-    });
+                BLinfo.partes = JSON.parse(JSON.stringify(partesEnvio));
+                if (BLinfo.partes.length > 0) {
+                    $('#generarDocumentacion').removeAttr('disabled');
+                }
+            });
+        }
 
+    });
+    $('#generarDocumentacion').on('click', async function () {
+        let url = 'http://localhost:3000/BillOfLanding';
+        let options = {//opciones para la petición
+            method: 'POST',
+            body: JSON.stringify(BLinfo),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let res = await pet.json();
+        console.log(res);
+        $(this).attr('disabled', true);
+        BLinfo = {};
+
+
+    });
     $('#terminarReciboCostales').on('click', function () {//Evento para terminar los recibos de contales
         $('#piezasTNET > tbody  > tr > td > .checked').each(async function () {
             let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
@@ -706,7 +750,7 @@ async function initMovimientos() {
         let fecha = movimiento.fecha.split("T")[0];
         modales += `<div style="display:none" id="modal-${movimiento.id_movimiento}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Movimiento ${movimiento.id_movimiento} del ${movimiento.fecha}</h4> </div> <div class="modal-body"> <form id="${movimiento.id_movimiento}-Info" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Origen <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.proveedor}" data-prove="${movimiento.id_proveedor}" name="origen" id="${movimiento.id_movimiento}-proveedor" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Cliente Proveedor" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Destino </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value='${movimiento.destino || ""}' data-dest="${movimiento.id_destino}" name="destino" id="${movimiento.id_movimiento}-destino" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Cliente de Destino" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${(movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte}" name="parte" id="${movimiento.id_movimiento}-parte" class="form-control col-md-7 col-xs-12" placeholder="N° de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.descripcion}" name="desc" id="${movimiento.id_movimiento}-parte-desc" class="form-control col-md-7 col-xs-12" placeholder="Descripción de la Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Contenedor <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.id_contenedor || ""}" name="contenedor" id="${movimiento.id_movimiento}-contenedor" class="form-control col-md-7 col-xs-12" placeholder="N° de Contenedor" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Candado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${movimiento.id_candado || ""}" name="contenedor" id="${movimiento.id_movimiento}-candado" class="form-control col-md-7 col-xs-12" placeholder="N° de Candado" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Fecha <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${fecha}" name="contenedor" id="${movimiento.id_movimiento}-fecha" class="form-control col-md-7 col-xs-12" placeholder="Fecha" /> </div> </div> </div> </form> </div> </div> </div> </div>`;
 
-        mov.row.add([`{"movimiento":"${movimiento.id_movimiento}","clasificacion":"${movimiento.clas}"}`, movimiento.proveedor, movimiento.destino || "", (movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte, movimiento.descripcion, movimiento.fechaf,movimiento.cant_parte ,movimiento.cant_anterior,movimiento.cant_posterior,`<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Detalles" data-target="#modal-${movimiento.id_movimiento}"><span class="fa fa-eye"></span></button>`]).draw();
+        mov.row.add([`{"movimiento":"${movimiento.id_movimiento}","clasificacion":"${movimiento.clas}"}`, movimiento.proveedor, movimiento.destino || "", (movimiento.no_parte == 5) ? movimiento.peso : movimiento.no_parte, movimiento.descripcion, movimiento.fechaf, movimiento.cant_parte, movimiento.cant_anterior, movimiento.cant_posterior, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Detalles" data-target="#modal-${movimiento.id_movimiento}"><span class="fa fa-eye"></span></button>`]).draw();
 
     });
     $('#ModalesMovimientos').html(modales);
