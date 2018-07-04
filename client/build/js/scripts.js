@@ -277,7 +277,7 @@ async function initRecibo() {
     });
 }
 async function initEnvios() {
-    let BLinfo = {};
+    let BLinfo = {}, OSinfo = {};
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
     let count = 1;
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
@@ -364,12 +364,12 @@ async function initEnvios() {
         BLinfo.candado = a.candado;
         BLinfo.contenedor = a.contenedor;
         BLinfo.fecha = a.fecha;
-
-        let direc = `http://localhost:3000/cliente/${destino}`;
+        BLinfo.semana = moment(a.fecha, 'DD/MM/YYYY').week();
+        let direc = `http://localhost:3000/cliente/${destino}/${a.id_proveedor}`;
         let f = await fetch(direc);
         let i = await f.json();
-        console.log(i);
         BLinfo.cliente = JSON.parse(JSON.stringify(i));
+        console.log(BLinfo);
 
         if (destino == 0 || a.id_proveedor == 0) {
             $.notify("Falta llenar campos obligatorios  (*)");
@@ -377,6 +377,7 @@ async function initEnvios() {
             t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
                 if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
                     a = $("#form1").serializeObject();
+
                     let data = this.data();//data de la fila
                     a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
                     a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
@@ -419,6 +420,7 @@ async function initEnvios() {
 
     });
     $('#generarDocumentacion').on('click', async function () {
+        //Generar Bill Of Landing
         let url = 'http://localhost:3000/BillOfLanding';
         let options = {//opciones para la petición
             method: 'POST',
@@ -426,8 +428,27 @@ async function initEnvios() {
             headers: { "Content-Type": "application/json" }
         }
         let pet = await fetch(url, options);
-        let res = await pet.json();
-        console.log(res);
+        let BLOK = await pet.json();
+        //Generar Order Sheet
+        let url1 = 'http://localhost:3000/OrderSheet';
+        let o = {
+            method: 'POST',
+            body: JSON.stringify(BLinfo),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet1 = await fetch(url1, o);
+        let OSOK = await pet1.json();
+        //Generar Packing List
+        let url2 = 'http://localhost:3000/PackingList';
+        let p = {
+            method: 'POST',
+            body: JSON.stringify(BLinfo),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet2 = await fetch(url2, p);
+        let PLOK = await pet2.json();
+
+        //Deshabilitar botón
         $(this).attr('disabled', true);
         BLinfo = {};
 
@@ -476,8 +497,8 @@ async function initPartes() {
         "ordering": false,
         "createdRow": function (row, data) {
             $(row).attr("data-prove", data[0]);
-            let min = data[3];
-            let existencia = data[4];
+            let min = data[4];
+            let existencia = data[5];
             (min > existencia) ? setInterval(function () {
                 $(row).css({
                     "color": "black", "background-color": function () {
@@ -513,7 +534,6 @@ async function initPartes() {
     costales.forEach(costal => {
         let fecha = costal.fecha.split("T")[0];
         let color = costal.color;
-        console.log(color);
         tnetmodals += `<div style="display:none" id="modal-${costal.secuencia}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Costal ${costal.secuencia}</h4> </div> <div class="modal-body"> <form id="Costal-${costal.secuencia}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Secuencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${costal.secuencia}" name="secuencia" id="in_secuencia-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Secuencia" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" value="${costal.peso}" id="in_peso-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="Peso"/></div></div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Identificador FIFO <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control" data-color="${costal.color}"  id="color-${costal.secuencia}" name="color" style="background-color:#${fifoColorsTNET[color]}"><option hidden selected value="${color}"></option><option value="0" style="background-color:#C00000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="1" style="background-color:#FF0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="2" style="background-color:#FFC000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="3" style="background-color:#FFFF00">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="4" style="background-color:#92D050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="5" style="background-color:#00B050">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="6" style="background-color:#00B0F0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="7" style="background-color:#0070C0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="8" style="background-color:#002060">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> <option value="9" style="background-color:#7030A0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nota <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${costal.nota}" name="nota" id="in_nota-${costal.secuencia}" class="form-control col-md-7 col-xs-12" placeholder="N° de Nota" /> </div> </div> </div> </form> </div> <div class="modal-footer"> <button type="button" data-target=${costal.secuencia} class="btn btn-primary actualizarCostal">Guardar Cambios</button> </div> </div> </div> </div>`;
         tnet.row.add([costal.nota, fecha, costal.peso, costal.secuencia, costal.color, `<button type="button" class="btn btn-primary editarc" data-toggle="modal" data-parte=${costal.secuencia} data-target="#modal-${costal.secuencia}">Editar <span class="fa fa-edit"></span></button>`]).draw();
 
@@ -711,7 +731,6 @@ async function initClientes() {
     });
     $('#registroCliente').on('click', async function () {
         let form = $('#RegistrarClienteForm').serializeObject();
-        console.log(form);
         let url = "http://localhost:3000/cliente/1";
         let options = {
             method: 'post',
@@ -959,8 +978,7 @@ async function initContactos() {
 function init_daterangepicker() {
     if ("undefined" != typeof $.fn.daterangepicker) {
         var a = function (a, b, c) {
-            console.log(a.toISOString(), b.toISOString(), c),
-                $("#reportrange span").html(a.format("DD/MMMM/YYYY") + " - " + b.format("DD/MMMM/YYYY"))
+            $("#reportrange span").html(a.format("DD/MMMM/YYYY") + " - " + b.format("DD/MMMM/YYYY"))
         }
             , b = {
                 startDate: moment(),

@@ -2,17 +2,24 @@ var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
 
-api.get('/cliente/:id?', function (req, res) {
+api.get('/cliente/:id?/:idS?', function (req, res) {
+    idS = req.params.idS;
+    id = req.params.id;
     //Seleccionar un almacén en específico
-    if (req.params.id) {
+    if (req.params.id && !req.params.idS) {
         var id_cliente = req.params.id;
         con.query(`select * from clientes where id_cliente=${id_cliente}`, function (err, rows) {
             if (err) throw err
             else res.send(rows);
         });
         //Seleccionar todos los clientes
-    } else {
+    } else if (!req.params.id && !req.params.idS) {
         con.query("select * from clientes", function (error, rows) {
+            if (error) throw error
+            else res.send(rows);
+        });
+    }else if (idS != null && id != null) {
+        con.query(`select * from clientes where id_cliente in(${id},${idS}) order by nat`, function (error, rows) {
             if (error) throw error
             else res.send(rows);
         });
