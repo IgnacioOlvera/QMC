@@ -4,7 +4,7 @@ var app = require('./app');
 con.connect(function (err) {
     if (err) throw err
     else
-        app.listen(3000, function () {
-            console.log("Servidor escuchando en http://localhost:" + 3000);
+        app.listen(process.env.PORT || 3000, function () {
+            console.log("Servidor escuchando en http://localhost:" + process.env.PORT || 3000);
         });
 });
