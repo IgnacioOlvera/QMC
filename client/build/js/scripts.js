@@ -163,7 +163,7 @@ async function initRecibo() {
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
         "ordering": false
     });
-    let pet = await fetch("http://localhost:3000/clienteNat/0");//petición para llenar combo de clientes proveedores
+    let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {//Llenado de select con todos lo clientes
@@ -195,7 +195,7 @@ async function initRecibo() {
         } else {
             $('#piezas').show('oculto');//mostrar la tabla de clientes normales
             $('#tablaTNET').hide('oculto');//ocultar la tabla de tnet
-            let pet = await fetch('http://localhost:3000/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
+            let pet = await fetch('/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
@@ -233,7 +233,7 @@ async function initRecibo() {
                     body: a,
                     headers: { "Content-Type": "application/json" }
                 }
-                let c = await fetch('http://localhost:3000/entradas', options);//petición
+                let c = await fetch('entradas', options);//petición
                 let res = await c.json();
                 t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
                 t.$('label').text('0');//regresar las cantidades a sus valores iniciales
@@ -263,7 +263,7 @@ async function initRecibo() {
                 body: a,
                 headers: { "Content-Type": "application/json" }
             }
-            let c = await fetch('http://localhost:3000/entradas', options);//petición
+            let c = await fetch('entradas', options);//petición
             let res = await c.json();
             tnet.rows().remove().draw();
             if (res.status == 200) {
@@ -287,13 +287,13 @@ async function initEnvios() {
         "ordering": false
     });
 
-    let pet = await fetch('http://localhost:3000/clienteNat/0');
+    let pet = await fetch('/clienteNat/0');
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
         $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
     });
-    let url = `http://localhost:3000/clienteNat/1`
+    let url = `/clienteNat/1`
     pet = await fetch(url)
     clientes = await pet.json();
     $('#in_clienteDest').append('<option selected value="0"> Sección de cliente...</option>')
@@ -309,7 +309,7 @@ async function initEnvios() {
     }, function (a, b, c) {
         //console.log(a.toISOString(), b.toISOString(), c)
     });
-    url = "httP://localhost:3000/costales";
+    url = "/costales";
     pet = await fetch(url);
     let costales = await pet.json();
 
@@ -328,7 +328,7 @@ async function initEnvios() {
         } else {
             $('#piezas').show('oculto');//mostrar la tabla de clientes normales
             $('#tablaTNET').hide('oculto');//ocultar la tabla de tnet
-            let pet = await fetch('http://localhost:3000/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
+            let pet = await fetch('/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
@@ -365,7 +365,7 @@ async function initEnvios() {
         BLinfo.contenedor = a.contenedor;
         BLinfo.fecha = a.fecha;
         BLinfo.semana = moment(a.fecha, 'DD/MM/YYYY').week();
-        let direc = `http://localhost:3000/cliente/${destino}/${a.id_proveedor}`;
+        let direc = `/cliente/${destino}/${a.id_proveedor}`;
         let f = await fetch(direc);
         let i = await f.json();
         BLinfo.cliente = JSON.parse(JSON.stringify(i));
@@ -387,14 +387,14 @@ async function initEnvios() {
                         body: a,
                         headers: { "Content-Type": "application/json" }
                     }
-                    let c = await fetch('http://localhost:3000/salidas', options);//petición
+                    let c = await fetch('/salidas', options);//petición
                     let res = await c.json();
                     t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
                     t.$('label').text('0');//regresar las cantidades a sus valores iniciales
                     if (destino != 0 || a.id_proveedor != 0) {
                         if (res.status == 200) {
                             $.notify(res.message, "success");//mensaje del backend
-                            let url = `http://localhost:3000/parte/${data[0]}`;
+                            let url = `/parte/${data[0]}`;
                             let p = await fetch(url);
                             let r = await p.json();
                             let part = {};
@@ -421,7 +421,7 @@ async function initEnvios() {
     });
     $('#generarDocumentacion').on('click', async function () {
         //Generar Bill Of Landing
-        let url = 'http://localhost:3000/BillOfLanding';
+        let url = '/BillOfLanding';
         let options = {//opciones para la petición
             method: 'POST',
             body: JSON.stringify(BLinfo),
@@ -430,7 +430,7 @@ async function initEnvios() {
         let pet = await fetch(url, options);
         let BLOK = await pet.json();
         //Generar Order Sheet
-        let url1 = 'http://localhost:3000/OrderSheet';
+        let url1 = '/OrderSheet';
         let o = {
             method: 'POST',
             body: JSON.stringify(BLinfo),
@@ -439,7 +439,7 @@ async function initEnvios() {
         let pet1 = await fetch(url1, o);
         let OSOK = await pet1.json();
         //Generar Packing List
-        let url2 = 'http://localhost:3000/PackingList';
+        let url2 = '/PackingList';
         let p = {
             method: 'POST',
             body: JSON.stringify(BLinfo),
@@ -475,7 +475,7 @@ async function initEnvios() {
                     body: a,
                     headers: { "Content-Type": "application/json" }
                 }
-                let c = await fetch('http://localhost:3000/salidas', options);//petición
+                let c = await fetch('/salidas', options);//petición
                 let res = await c.json();
                 if (res.status == 200) {
                     $.notify(res.message, "success");//mensaje del backend
@@ -521,13 +521,13 @@ async function initPartes() {
             $('td', row).eq(4).css('background-color', "#" + fifoColorsTNET[data[4]]).html("");
         }
     });
-    let pet = await fetch('http://localhost:3000/clienteNat/0');
+    let pet = await fetch('/clienteNat/0');
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
         $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
     });
-    pet = await fetch("http://localhost:3000/costales");
+    pet = await fetch("/costales");
 
     let costales = await pet.json();
     let tnetmodals = "";
@@ -555,7 +555,7 @@ async function initPartes() {
             body: JSON.stringify(form),
             headers: { "Content-Type": "application/json" }
         }
-        let url = "http://localhost:3000/costales";
+        let url = "/costales";
         let pet = await fetch(url, options);
         let r = await pet.json();
         if (r.status == 500) {
@@ -574,7 +574,7 @@ async function initPartes() {
     let bandera = true;
     $('#in_cliente').on('change', async function () {
         if (bandera == true) {
-            let pet = await fetch('http://localhost:3000/proveedor');//Petición para traer todas las piezas que surte un proveedor
+            let pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             partes.forEach(parte => {
                 (parte.exterior == null) ? parte.exterior = "" : parte.exterior;
@@ -603,7 +603,7 @@ async function initPartes() {
                     method: 'delete',
                     headers: { "Content-Type": "application/json" }
                 }
-                let pet = await fetch(`http://localhost:3000/parte/${parte}`, options);
+                let pet = await fetch(`/parte/${parte}`, options);
                 let res = await pet.json();
 
                 if (res.status == 500)
@@ -624,7 +624,7 @@ async function initPartes() {
                     body: JSON.stringify(form),
                     headers: { "Content-Type": "application/json" }
                 }
-                let pet = await fetch('http://localhost:3000/parte/0', options);
+                let pet = await fetch('/parte/0', options);
                 let res = await pet.json();
                 if (res.status == 500) {
                     $.notify(res.message);
@@ -656,7 +656,7 @@ async function initPartes() {
                 body: form,
                 headers: { "Content-Type": "application/json" }
             }
-            let url = "http://localhost:3000/parte/1"
+            let url = "/parte/1"
             let pet = await fetch(url, options);
             let res = await pet.json();
 
@@ -673,7 +673,7 @@ async function initPartes() {
 }
 async function initClientes() {
     let TablaClientes = $('#ClientesInfo').DataTable();
-    let url = "http://localhost:3000/cliente";
+    let url = "/cliente";
     let pet = await fetch(url);
     let clientes = await pet.json();
     let modales = "", nat = ['Proveedor', 'Cliente'];
@@ -691,7 +691,7 @@ async function initClientes() {
         form.id_cliente = $(this).data("target");
         form.nat = $(`#nat_${$(this).data("target")}`).val() || $(`#nat_${$(this).data("target")}`).data("val");
         form.estado = $('#estado_' + $(this).data("target")).val() || $('#estado_' + $(this).data("target")).data("val");
-        let url = "http://localhost:3000/cliente/0";
+        let url = "/cliente/0";
         let options = {
             method: 'post',
             body: JSON.stringify(form),
@@ -713,7 +713,7 @@ async function initClientes() {
     });
     $('.eliminar').on('click', async function () {
         let cliente = $(this).data("target");
-        let url = "http://localhost:3000/cliente/" + cliente;
+        let url = "/cliente/" + cliente;
         let options = {
             method: 'delete',
             headers: { "Content-Type": "application/json" }
@@ -731,7 +731,7 @@ async function initClientes() {
     });
     $('#registroCliente').on('click', async function () {
         let form = $('#RegistrarClienteForm').serializeObject();
-        let url = "http://localhost:3000/cliente/1";
+        let url = "/cliente/1";
         let options = {
             method: 'post',
             body: JSON.stringify(form),
@@ -761,7 +761,7 @@ var mov = $('#MovimientosInfo').DataTable({
 });
 async function initMovimientos() {
 
-    let url = "http://localhost:3000/movimientos"
+    let url = "/movimientos"
     let pet = await fetch(url);
     let movimientos = await pet.json();
     let modales = "";
@@ -785,7 +785,7 @@ async function initMovimientos() {
     init_daterangepicker();
 }
 async function initContactos() {
-    let p = await fetch('http://localhost:3000/cliente');
+    let p = await fetch('/cliente');
     let clientes = await p.json();
     let selectCliente = '<select class="form-control" name="cliente" id="NuevoContactoCliente">';
     selectCliente += '<option value="0" selected disabled> Selección de cliente...</option>';
@@ -809,7 +809,7 @@ async function initContactos() {
             }
         ]
     });
-    let url = "http://localhost:3000/contacto";
+    let url = "/contacto";
     let pet = await fetch(url);
     let contactos = await pet.json();
     let modales = "";
@@ -835,7 +835,7 @@ async function initContactos() {
             body: JSON.stringify(form),
             headers: { "Content-Type": "application/json" }
         }
-        let url = "http://localhost:3000/contacto/1";
+        let url = "/contacto/1";
         let pet = await fetch(url, options);
         let res = await pet.json();
         if (form.nombre != "" || null && telefono != "" || null && correo != "" || null && form.cliente == 0) {
@@ -844,7 +844,7 @@ async function initContactos() {
                 $('#AgregarContactoForm')[0].reset();
                 info.clear();
                 $('#AgregarContactoModal').modal('toggle');
-                url = "http://localhost:3000/contacto";
+                url = "/contacto";
                 pet = await fetch(url);
                 let contactos = await pet.json();
                 contactos.forEach(contacto => {
@@ -868,7 +868,7 @@ async function initContactos() {
             body: JSON.stringify(form),
             headers: { "Content-Type": "application/json" }
         }
-        let url = "http://localhost:3000/contacto/0";
+        let url = "/contacto/0";
         let pet = await fetch(url, options);
         let res = await pet.json();
         if (form.nombre != "" || null && telefono != "" || null && correo != "" || null && form.cliente == 0) {
@@ -877,7 +877,7 @@ async function initContactos() {
                 $($(this).data('target'))[0].reset();
                 info.clear();
                 $($(this).data("modal")).modal('toggle');
-                url = "http://localhost:3000/contacto";
+                url = "/contacto";
                 pet = await fetch(url);
                 let contactos = await pet.json();
                 contactos.forEach(contacto => {
@@ -893,7 +893,7 @@ async function initContactos() {
     });
 
     $('.eliminar').on('click', async function () {
-        let url = `http://localhost:3000/contacto/${$(this).data("target")}`;
+        let url = `/contacto/${$(this).data("target")}`;
         let options = {
             method: 'delete',
             headers: { "Content-Type": "application/json" }
@@ -1032,7 +1032,7 @@ function init_daterangepicker() {
                     data.fecha_inicio = b.startDate.format("DD/MM/YYYY");
                     data.fecha_final = b.endDate.format("DD/MM/YYYY");
                 }
-                let url = "http://localhost:3000/movimientosFecha"
+                let url = "/movimientosFecha"
                 let options = {
                     method: 'post',
                     body: JSON.stringify(data),
