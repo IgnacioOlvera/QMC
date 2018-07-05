@@ -36,8 +36,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
-var publicPath = path.join(__dirname, '/client'); //path.join(__dirname, 'public'); también puede ser una opción
-var publicImages = path.join(__dirname, '/client/production/images');
+var publicPath = path.join(__dirname, './client'); //path.join(__dirname, 'public'); también puede ser una opción
+var publicImages = path.join(__dirname, './client/production/images');
 // Para que los archivos estaticos queden disponibles.
 app.use(express.static(publicPath));
 app.use(express.static(publicImages));
