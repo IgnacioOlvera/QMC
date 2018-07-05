@@ -22,7 +22,6 @@ api.post('/parte/:b', function (req, res) {
     let parte = req.body;
     let b = req.params.b;//Bandera para decidir si es actualización o inserción
     if (parte != null && (b == 0 || b == 1)) {
-
         let id_parte = parte.id_parte || null,
             no_parte = parte.no_parte || null,
             descripcion = parte.descripcion || null,
@@ -35,7 +34,7 @@ api.post('/parte/:b', function (req, res) {
         if (id_parte != null && no_parte != null && descripcion != null, existencia != null && id_proveedor != 0) {
             if (b == 0)//Actualización de parte
                 con.query(`update partes set no_parte='${no_parte}',descripcion='${descripcion}',no_parte_ext=${no_parte_ext},cant_x_caja=${cant_x_caja},cant_x_pallet=${cant_x_pallet},cant_min=${cant_min},existencia=${existencia} where no_parte=${no_parte}`, function (err) {
-                    if (err) throw err
+                    if (err) res.send(err);
                     else
                         res.status(200).send({ message: 'Parte editada correctamente', status: "200" })
                 });
