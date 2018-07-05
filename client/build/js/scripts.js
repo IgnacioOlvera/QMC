@@ -1,7 +1,7 @@
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
     let mensual = echarts.init(document.getElementById('mensual'));
-    let url = "http://localhost:3000/SemanalRepo";
+    let url = "http://g8mh6ge01lu2z3n1.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:" + process.env.PORT + "/SemanalRepo";
     let entradas = [], salidas = [], categorias = [];
     let entr = [], sal = [], cat = [];
     let pet = await fetch(url);
@@ -12,7 +12,7 @@ async function initInicio() {
         categorias.push(`${res.inicio} a ${res.final}`)
     });
 
-    url = "http://localhost:3000/MensualRepo";
+    url = "http://g8mh6ge01lu2z3n1.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:" + process.env.PORT + "/MensualRepo";
     pet = await fetch(url);
     result = await pet.json();
     result.forEach(res => {
@@ -163,7 +163,7 @@ async function initRecibo() {
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
         "ordering": false
     });
-    let pet = await fetch('http://localhost:3000/clienteNat/0');//petición para llenar combo de clientes proveedores
+    let pet = await fetch("http://localhost:3000/clienteNat/0");//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {//Llenado de select con todos lo clientes
