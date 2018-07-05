@@ -1,9 +1,9 @@
 var mysql = require('mysql');
 var con = mysql.createConnection({
-    host: "us-cdbr-iron-east-04.cleardb.net",
-    user: "b6cb2661d1e790",
-    password: "69318445bc2b71f",
-    database:"heroku_2585833ccd9edf4",
+    host: "g8mh6ge01lu2z3n1.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
+    user: "exvmv4cox4vu19dq",
+    password: "nbxqrzgjrst4fvh5",
+    database:"sgqd0fcpu2lki8lm",
     timezone: 'utc'
 });
 module.exports=con;
