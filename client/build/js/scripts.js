@@ -1,7 +1,7 @@
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
     let mensual = echarts.init(document.getElementById('mensual'));
-    let url = "http://g8mh6ge01lu2z3n1.cbetxkdyhwsb.us-east-1.rds.amazonaws.com"+"/SemanalRepo";
+    let url = "/SemanalRepo";
     let entradas = [], salidas = [], categorias = [];
     let entr = [], sal = [], cat = [];
     let pet = await fetch(url);
@@ -12,7 +12,7 @@ async function initInicio() {
         categorias.push(`${res.inicio} a ${res.final}`)
     });
 
-    url = "http://g8mh6ge01lu2z3n1.cbetxkdyhwsb.us-east-1.rds.amazonaws.com"+"/MensualRepo";
+    url = "/MensualRepo";
     pet = await fetch(url);
     result = await pet.json();
     result.forEach(res => {
