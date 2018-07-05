@@ -4,7 +4,7 @@
   "description": "MRP para almacén de QMC",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "nodemon index.js"
   },
   "author": "Ignacio Olvera",
   "license": "ISC",
