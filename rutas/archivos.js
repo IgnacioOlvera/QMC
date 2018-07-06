@@ -758,6 +758,7 @@ api.post('/BillOfLanding', function (req, res) {
             }
         }
     });
+    console.log(homedir);
     wb.write(path.join(`${homedir}/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
