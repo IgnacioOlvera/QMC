@@ -1,6 +1,7 @@
 var xl = require('excel4node');
 var express = require('express');
 var api = express.Router();
+var path =require('path');
 
 api.post('/BillOfLanding', function (req, res) {
     info = req.body;
@@ -1409,7 +1410,7 @@ api.post('/PackingList', function (req, res) {
     ws.cell(4, 18, 4, 21, true).string('Página 1 de 1').style(bordeado);
 
     ws.addImage({
-        path: '../client/production/images/QMC_LOGO2.png',
+        path: path.join(__dirname,'../client/production/images/QMC_LOGO2.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
