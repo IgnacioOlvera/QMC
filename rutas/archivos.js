@@ -163,7 +163,7 @@ api.post('/BillOfLanding', function (req, res) {
     ws.column(23).setWidth(1);
     ws.column(24).setWidth(1);
     ws.addImage({
-        path: '../client/production/images/QMC_LOGO2.png',
+        path: path.join(__dirname,'../client/production/images/QMC_LOGO2.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
