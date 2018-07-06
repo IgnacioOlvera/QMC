@@ -758,7 +758,7 @@ api.post('/BillOfLanding', function (req, res) {
             }
         }
     });
-    wb.write(path.join(`/app/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
+    wb.write(path.join(__dirname,`../docs//Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
@@ -1576,7 +1576,7 @@ api.post('/PackingList', function (req, res) {
     ws.cell(72, 11, 72, 12, true).string([{ name: 'Verdana', size: 9 }, "Printed Name"]);
     ws.cell(72, 17, 72, 19, true).string([{ name: 'Verdana', size: 9 }, "Trucking Company"]);
 
-    wb.write(path.join(__dirname,`../api/docs/Packing List ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
+    wb.write(path.join(__dirname,`../docs/Packing List ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
