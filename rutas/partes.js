@@ -34,13 +34,13 @@ api.post('/parte/:b', function (req, res) {
         if (id_parte != null && no_parte != null && descripcion != null, existencia != null && id_proveedor != 0) {
             if (b == 0)//Actualización de parte
                 con.query(`update partes set no_parte='${no_parte}',descripcion='${descripcion}',no_parte_ext=${no_parte_ext},cant_x_caja=${cant_x_caja},cant_x_pallet=${cant_x_pallet},cant_min=${cant_min},existencia=${existencia} where no_parte=${no_parte}`, function (err) {
-                    if (err) res.send(err);
+                    if (err) console.log(err)
                     else
                         res.status(200).send({ message: 'Parte editada correctamente', status: "200" })
                 });
             else if (b == 1)//Inserción de parte
                 con.query(`insert into partes values(null,'${no_parte}','${descripcion}',${no_parte_ext},${cant_x_caja},${cant_x_pallet},${cant_min},${existencia},${id_proveedor})`, function (err) {
-                    if (err) res.send(err);
+                    if (err) console.log(err)
                     else
                         res.status(200).send({ message: 'Parte insertada correctamente', status: "200" })
                 });
