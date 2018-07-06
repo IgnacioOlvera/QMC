@@ -2,6 +2,7 @@ var xl = require('excel4node');
 var express = require('express');
 var api = express.Router();
 var path =require('path');
+const homedir = require('os').homedir();
 
 api.post('/BillOfLanding', function (req, res) {
     info = req.body;
@@ -757,7 +758,7 @@ api.post('/BillOfLanding', function (req, res) {
             }
         }
     });
-    wb.write(path.resolve(`/app/docs/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
+    wb.write(path.join(`${homedir}/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
