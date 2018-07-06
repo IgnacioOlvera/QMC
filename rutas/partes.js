@@ -5,10 +5,10 @@ var api = express.Router();
 api.get('/parte/:id?', function (req, res) {
     if (req.params.id) {//Si existe ID en el URL selecciona parte específica y su proveedor
         var no_parte = req.params.id;
-        con.query(`select b.*, (select nombre from clientes where id_cliente=id_proveedor) from partes b where no_parte=${no_parte}`, function (err, rows) {
+        con.query(`select b.*, (select nombre from clientes where id_cliente=id_proveedor) from partes b where no_parte='${no_parte}'`, function (err, rows) {
             if (err) throw err
             else res.send(rows);
-            
+
         });
     } else {//Seleccionar todas las partes con su respectivo proveedor.
         con.query("select *, (select nombre from clientes where id_cliente=b.id_proveedor) proveedor from partes b;", function (error, rows) {

@@ -233,7 +233,7 @@ async function initRecibo() {
                     body: a,
                     headers: { "Content-Type": "application/json" }
                 }
-                let c = await fetch('entradas', options);//petición
+                let c = await fetch('/entradas', options);//petición
                 let res = await c.json();
                 t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
                 t.$('label').text('0');//regresar las cantidades a sus valores iniciales
@@ -253,7 +253,6 @@ async function initRecibo() {
             let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
             let color = $('#color').val();//Obtener la información de la línea recorrida
             a.secuencia = seriales[rowIdx];//setear en el json la secuencia del costal
-            a.id_parte = "5";//setear el número de parte en este caso el 5 es simplemente un costal.
             a.peso = pesos[rowIdx]//setear peso en el json la secuencia del costal
             a.cant_parte = 1;//setear la cantidad de partes
             a.color = color;
@@ -263,7 +262,7 @@ async function initRecibo() {
                 body: a,
                 headers: { "Content-Type": "application/json" }
             }
-            let c = await fetch('entradas', options);//petición
+            let c = await fetch('/entradas', options);//petición
             let res = await c.json();
             tnet.rows().remove().draw();
             if (res.status == 200) {
@@ -369,8 +368,6 @@ async function initEnvios() {
         let f = await fetch(direc);
         let i = await f.json();
         BLinfo.cliente = JSON.parse(JSON.stringify(i));
-        console.log(BLinfo);
-
         if (destino == 0 || a.id_proveedor == 0) {
             $.notify("Falta llenar campos obligatorios  (*)");
         } else {
@@ -465,7 +462,6 @@ async function initEnvios() {
                     datos.push($(this).text());
                 });
                 a.secuencia = datos[0];//setear en el json la secuencia del costal
-                a.id_parte = "5";//setear el número de parte en este caso el 5 es simplemente un costal.
                 a.peso = datos[1]//setear peso en el json la secuencia del costal
                 a.cant_parte = "1";//setear la cantidad de partes
                 a.nota = datos[2];
