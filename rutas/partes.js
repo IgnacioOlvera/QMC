@@ -40,7 +40,7 @@ api.post('/parte/:b', function (req, res) {
                 });
             else if (b == 1)//Inserción de parte
                 con.query(`insert into partes values(null,'${no_parte}','${descripcion}',${no_parte_ext},${cant_x_caja},${cant_x_pallet},${cant_min},${existencia},${id_proveedor})`, function (err) {
-                    if (err) throw err
+                    if (err) res.send(err);
                     else
                         res.status(200).send({ message: 'Parte insertada correctamente', status: "200" })
                 });
