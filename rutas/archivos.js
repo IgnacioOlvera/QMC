@@ -758,7 +758,7 @@ api.post('/BillOfLanding', function (req, res) {
             }
         }
     });
-    wb.write(`../docs/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`, function (err) {
+    wb.write(path.join(__dirname,`../docs/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
