@@ -4,6 +4,7 @@ var con = mysql.createConnection({
     user: "exvmv4cox4vu19dq",
     password: "nbxqrzgjrst4fvh5",
     database:"sgqd0fcpu2lki8lm",
+
     timezone: 'utc'
 });
 module.exports=con;
