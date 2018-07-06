@@ -80,7 +80,7 @@ api.post('/entradas', function (req, res) {
     let entrada = req.body;
     let
         proveedor = entrada.id_proveedor || null,
-        parte = entrada.id_parte || null,
+        parte = `'${entrada.id_parte}'` || null,
         cantidad = entrada.cant_parte || null,
         fecha = entrada.fecha || null,
         contenedor = (entrada.id_candado == "") ? null : `'${entrada.id_contenedor}'`,
@@ -143,7 +143,7 @@ api.post('/salidas', function (req, res) {
     let
         proveedor = salida.id_proveedor || null,
         destino = salida.id_destino || null,
-        parte = salida.id_parte || null,
+        parte = `'${salida.id_parte}'` || null
         cantidad = salida.cant_parte || null,
         fecha = salida.fecha || null,
         secuencia = salida.secuencia || null,
@@ -175,13 +175,15 @@ api.post('/salidas', function (req, res) {
                 });
 
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte='${parte}'),(select existencia-${cantidad} from partes where no_parte='${parte}'),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,null)`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte=${parte}),(select existencia-${cantidad} from partes where no_parte=${parte}),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,null)`;
+                console.log(sql);
                 con.query(sql, function (err) {
-                    if (err) res.send({ message: 'Ocurrió un error SQL', status: "500" });
+                    if (err) throw err//res.send({ message: 'Ocurrió un error SQL', status: "500" });
                     else {
                         sql = `update partes set existencia=existencia-${cantidad} where no_parte=${parte};`;
+                        console.log(sql);
                         con.query(sql, function (err) {
-                            if (err) res.send({ message: 'Ocurrió un error SQL', status: "500" });
+                            if (err) throw err//res.send({ message: 'Ocurrió un error SQL', status: "500" });
                             else res.send({ message: 'Salida Registrada Correctamente', status: "200" });
                         });
                     }
