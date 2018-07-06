@@ -162,7 +162,7 @@ api.post('/BillOfLanding', function (req, res) {
     ws.column(23).setWidth(1);
     ws.column(24).setWidth(1);
     ws.addImage({
-        path: '../api/client/production/images/QMC_LOGO2.png',
+        path: '../client/production/images/QMC_LOGO2.png',
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -181,7 +181,7 @@ api.post('/BillOfLanding', function (req, res) {
         }
     });
     ws.addImage({
-        path: '../api/client/production/images/check.png',
+        path: '../client/production/images/check.png',
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -200,7 +200,7 @@ api.post('/BillOfLanding', function (req, res) {
         }
     });
     ws.addImage({
-        path: '../api/client/production/images/check.png',
+        path: '../client/production/images/check.png',
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -996,7 +996,7 @@ api.post('/OrderSheet', function (req, res) {
 
     //Logo QMC
     ws.addImage({
-        path: '../api/client/production/images/QMC_LOGO2.png',
+        path: '../client/production/images/QMC_LOGO2.png',
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -1183,7 +1183,7 @@ api.post('/OrderSheet', function (req, res) {
 
     //Escribir Documento
 
-    wb.write(`../api/docs/Order Sheet ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`, function (err) {
+    wb.write(`../docs/Order Sheet ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`, function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
@@ -1409,7 +1409,7 @@ api.post('/PackingList', function (req, res) {
     ws.cell(4, 18, 4, 21, true).string('Página 1 de 1').style(bordeado);
 
     ws.addImage({
-        path: '../api/client/production/images/QMC_LOGO2.png',
+        path: '../client/production/images/QMC_LOGO2.png',
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
