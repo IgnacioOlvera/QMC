@@ -200,11 +200,21 @@
 
                                                             <div class="item form-group">
                                                                 <label class="control-label col-md-3 col-sm-3 col-xs-12">
-                                                                    Cantidad X Mínima
+                                                                    Cantidad Mínima
                                                                     <span class="required">*</span>
                                                                 </label>
                                                                 <div class="col-md-6 col-sm-6 col-xs-12">
                                                                     <input type="number" min="0" name="cant_min" id="in_cant_min" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <div class="item form-group">
+                                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">
+                                                                    Peso por Unidad
+                                                                    <span class="required">*</span>
+                                                                </label>
+                                                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                                                    <input type="number" min="0" name="peso" id="in_peso" class="form-control col-md-7 col-xs-12" placeholder="Peso por Unidad"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -225,6 +235,19 @@
                                                                 </label>
                                                                 <div class="col-md-6 col-sm-6 col-xs-12">
                                                                     <select name="id_proveedor" id="in_provee" class="form-control col-md-7 col-xs-12">
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="item form-group">
+                                                                <label class="control-label col-md-3 col-sm-3 col-xs-12">
+                                                                    Estado
+                                                                    <span class="required">*</span>
+                                                                </label>
+                                                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                                                    <select class="form-control col-md-7 col-xs-12" name="estado" id="parte_estado">
+                                                                        <option disabled selected>Activo/Inactivo</option>
+                                                                        <option value="0">Activo</option>
+                                                                        <option value="1">Inactivo</option>
                                                                     </select>
                                                                 </div>
                                                             </div>

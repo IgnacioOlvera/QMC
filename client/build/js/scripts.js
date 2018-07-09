@@ -167,7 +167,7 @@ async function initRecibo() {
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {//Llenado de select con todos lo clientes
-        $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
+        (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
     $('#agregarCostal').on('click', function () {//Función del botón para agregar un costal más a la lista
         let fecha = $('#fecha_recibo').val();
@@ -199,7 +199,7 @@ async function initRecibo() {
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
-                t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="number" min="0" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw();
+                (parte.estado == 0) ? t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="number" min="0" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw() : null;
             });
             $('.cantidad').on('keyup', function () {//Evento del input de cantidad para los labels de tarimas y cajas
                 let cantidad = $(this).val();//Obtener cantidad del input
@@ -290,14 +290,14 @@ async function initEnvios() {
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
-        $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
+        (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
     let url = `/clienteNat/1`
     pet = await fetch(url)
     clientes = await pet.json();
     $('#in_clienteDest').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
-        $('#in_clienteDest').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
+        (cliente.estado == 'ACTIVO') ? $('#in_clienteDest').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
     $("#fecha_recibo").daterangepicker({
         singleDatePicker: !0,
@@ -331,7 +331,7 @@ async function initEnvios() {
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
-                t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="text" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw();
+                (parte.estado == 0) ? t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="text" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw() : null;
             });
             $('.cantidad').on('keyup', function () {//Evento del input de cantidad para los labels de tarimas y cajas
                 let cantidad = $(this).val();//Obtener cantidad del input
@@ -492,7 +492,8 @@ async function initPartes() {
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
         "ordering": false,
         "createdRow": function (row, data) {
-            $(row).attr("data-prove", data[0]);
+            info = JSON.parse(data[0]);
+            $(row).attr("data-prove", info.proveedor);
             let min = data[4];
             let existencia = data[5];
             (min > existencia) ? setInterval(function () {
@@ -503,6 +504,7 @@ async function initPartes() {
                     }, 'font-weight': 'bold'
                 });
             }, 700) : "";
+            (info.estado == 1) ? $(row).css({ 'background-color': "#d51f2e9c", 'color': 'black' }) : null;
 
         }, "columnDefs": [
             {
@@ -521,10 +523,9 @@ async function initPartes() {
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
-        $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`);
+        (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
     pet = await fetch("/costales");
-
     let costales = await pet.json();
     let tnetmodals = "";
     costales.forEach(costal => {
@@ -574,10 +575,10 @@ async function initPartes() {
             let partes = await pet.json();
             partes.forEach(parte => {
                 (parte.exterior == null) ? parte.exterior = "" : parte.exterior;
-                modales += `<div style="display:none" id="modal-${parte.interior}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${parte.descripcion} - ${parte.interior}</h4> </div> <div class="modal-body"> <form id="Parte-${parte.interior}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.interior}" name="no_parte" id="in_no_parte-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte Exterior </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.exterior}" name="no_parte_ext" id="in_no_parte_ext-${parte.exterior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte Exterior En Caso de Existir" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="descripcion" value="${parte.descripcion}" id="in_decripcion-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Descripción" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Caja <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.caja}" name="cant_x_caja" id="in_cantxcaja-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Caja" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Pallet <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.pallet}" min="0" name="cant_x_pallet" id="in_cantxpallet-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Pallet" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Mínima <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.cant_min}" min="0" name="cant_min" id="in_cant_min-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Existencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.existencia}" name="existencia" id="in_existencia-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> </div> </form></div> <div class="modal-footer"> <button type="button" data-target="${parte.interior}" data-parte="${parte.interior}" class="btn btn-primary actualizarParte">Guardar Cambios</button></div> </div> </div> </div>`;
+                modales += `<div style="display:none" id="modal-${parte.interior}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${parte.descripcion} - ${parte.interior}</h4> </div> <div class="modal-body"> <form id="Parte-${parte.interior}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.interior}" name="no_parte" id="in_no_parte-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte Exterior </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.exterior}" name="no_parte_ext" id="in_no_parte_ext-${parte.exterior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte Exterior En Caso de Existir" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="descripcion" value="${parte.descripcion}" id="in_decripcion-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Descripción" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Caja <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.caja}" name="cant_x_caja" id="in_cantxcaja-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Caja" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Pallet <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.pallet}" min="0" name="cant_x_pallet" id="in_cantxpallet-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Pallet" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Mínima <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.cant_min}" min="0" name="cant_min" id="in_cant_min-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Existencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.existencia}" name="existencia" id="in_existencia-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso por Unidad <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" id="in_peso-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Peso por Unidad" /></div></div><div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Estado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="estado" id="parte_estado-${parte.interior}"> <option disabled selected>${(parte.estado == 1) ? 'Inactivo' : 'Activo'}</option> <option value="0">Activo</option> <option value="1">Inactivo</option> </select> </div> </div></div> </form></div> <div class="modal-footer"> <button type="button" data-target="${parte.interior}" data-parte="${parte.interior}" class="btn btn-primary actualizarParte">Guardar Cambios</button></div> </div> </div> </div>`;
                 let cajas = Math.floor(parte.existencia / parte.caja);
                 let tarimas = Math.floor(cajas / parte.pallet);
-                t.row.add([parte.id_proveedor, parte.interior, parte.exterior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
+                t.row.add([`{"proveedor":${parte.id_proveedor},"estado":${parte.estado}}`, parte.interior, parte.exterior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
             });
             t.draw();
             bandera = !bandera;

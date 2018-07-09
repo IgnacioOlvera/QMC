@@ -18,7 +18,7 @@ api.get('/cliente/:id?/:idS?', function (req, res) {
             if (error) throw error
             else res.send(rows);
         });
-    }else if (idS != null && id != null) {
+    } else if (idS != null && id != null) {
         con.query(`select * from clientes where id_cliente in(${id},${idS}) order by nat`, function (error, rows) {
             if (error) throw error
             else res.send(rows);
@@ -97,13 +97,13 @@ api.get('/proveedor/:id?', function (req, res) {
     let sql = "";
     if (req.params.id) {//si existe id en el URL, se selecciona las partes que surte el cliente
         let id_cliente = req.params.id
-        sql = `select a.no_parte interior,a.no_parte_ext exterior,a.descripcion descripcion,a.cant_x_caja caja,a.cant_x_pallet pallet,a.existencia,a.cant_min,b.nombre proveedor,b.id_cliente id_proveedor from partes a inner join (select id_cliente,nombre from clientes where id_cliente=${id_cliente}) b on a.id_proveedor=b.id_cliente;`;
+        sql = `select a.no_parte interior,a.no_parte_ext exterior,a.descripcion descripcion,a.cant_x_caja caja,a.cant_x_pallet pallet,a.existencia,a.cant_min,b.nombre proveedor,b.id_cliente id_proveedor,a.estado from partes a inner join (select id_cliente,nombre from clientes where id_cliente=${id_cliente}) b on a.id_proveedor=b.id_cliente;`;
         con.query(sql, function (err, rows) {
             if (err) throw err
             else res.send(rows);
         });
     } else {//Partes que surte el cliente.
-        sql = `select a.no_parte interior,a.no_parte_ext exterior,a.descripcion descripcion,a.cant_x_caja caja,a.cant_x_pallet pallet,a.existencia,a.cant_min,b.nombre proveedor,b.id_cliente id_proveedor from partes a inner join (select id_cliente,nombre from clientes) b on a.id_proveedor=b.id_cliente;`;
+        sql = `select a.no_parte interior,a.no_parte_ext exterior,a.descripcion descripcion,a.cant_x_caja caja,a.cant_x_pallet pallet,a.existencia,a.cant_min,b.nombre proveedor,b.id_cliente id_proveedor,a.estado estado from partes a inner join (select id_cliente,nombre from clientes) b on a.id_proveedor=b.id_cliente;`;
         con.query(sql, function (err, rows) {
             if (err) throw err
             else res.send(rows);
