@@ -53,11 +53,12 @@ api.post('/cliente/:b', function (req, res) {
             direccion = cliente.direccion || null,
             rfc = (cliente.rfc == "") ? null : `'${cliente.rfc}'`,
             estado = cliente.estado || null,
-            nat = cliente.nat;
+            nat = cliente.nat,
+            rsocial = cliente.rsocial;
         if (id_cliente != null && nombre != null && rfc != null, estado != null, nat != null) {
             //Actuazlición de cliente
             if (b == 0) {
-                sql = `update clientes set nombre='${nombre}',direccion='${direccion}',rfc=${rfc},estado='${estado}',nat=${nat} where id_cliente=${id_cliente}`;
+                sql = `update clientes set nombre='${nombre}',direccion='${direccion}',rfc=${rfc},estado='${estado}',nat=${nat},rsocial='${rsocial}' where id_cliente=${id_cliente}`;
                 con.query(sql, function (err) {
                     if (err) throw err
                     else
@@ -65,7 +66,7 @@ api.post('/cliente/:b', function (req, res) {
                 });
             }
             else if (b == 1) {//Inserción de Cliente
-                sql = `insert into clientes values(null,'${nombre}','${direccion}',${rfc},null,'${estado}',${nat})`;
+                sql = `insert into clientes values(null,'${nombre}','${direccion}',${rfc},null,'${estado}',${nat},'${rsocial}')`;
                 con.query(sql, function (err) {
                     if (err) throw err//res.send({ message: 'Ocurrió un error SQL', status: "500" });
                     else

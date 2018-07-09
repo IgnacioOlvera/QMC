@@ -1,7 +1,7 @@
 var xl = require('excel4node');
 var express = require('express');
 var api = express.Router();
-var path =require('path');
+var path = require('path');
 const homedir = require('os').homedir();
 
 api.post('/BillOfLanding', function (req, res) {
@@ -164,7 +164,7 @@ api.post('/BillOfLanding', function (req, res) {
     ws.column(23).setWidth(1);
     ws.column(24).setWidth(1);
     ws.addImage({
-        path: path.join(__dirname,'../client/production/images/QMC_LOGO2.png'),
+        path: path.join(__dirname, '../client/production/images/QMC_LOGO2.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -183,7 +183,7 @@ api.post('/BillOfLanding', function (req, res) {
         }
     });
     ws.addImage({
-        path: path.join(__dirname,'../client/production/images/check.png'),
+        path: path.join(__dirname, '../client/production/images/check.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -202,7 +202,7 @@ api.post('/BillOfLanding', function (req, res) {
         }
     });
     ws.addImage({
-        path: path.join(__dirname,'../client/production/images/check.png'),
+        path: path.join(__dirname, '../client/production/images/check.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -346,18 +346,18 @@ api.post('/BillOfLanding', function (req, res) {
         bold: true,
         size: 11,
         name: 'Arial',
-    }, `${info.cliente[0].nombre}\n`,
+    }, `${info.cliente[1].nombre}\n`,
     {
         bold: false,
         size: 11,
         name: 'Arial'
-    }, `${info.cliente[0].direccion}\nRFC:${info.cliente[0].RFC}`
+    }, `${info.cliente[1].direccion}\nRFC:${info.cliente[1].RFC}`
     ]).style(bordeadoJustificado);
     ws.cell(24, 12, 24, 23, true).string([{
         size: 7.5
     }, 'BY']).style(AllBorder);
 
-    ws.cell(25, 12, 26, 23, true).string('Inoplast Composities').style(AllBorder);
+    ws.cell(25, 12, 26, 23, true).string(info.cliente[1].rsocial).style(AllBorder);
 
     ws.cell(27, 12, 27, 17, true).string([{
         size: 7.5
@@ -465,6 +465,7 @@ api.post('/BillOfLanding', function (req, res) {
         }
     }
     let inicio = 35;
+    let peso_total = 0;
     for (i in info.partes) {
         let parte = info.partes[i];
         let cant_caja = parte.cant_x_caja;
@@ -472,13 +473,14 @@ api.post('/BillOfLanding', function (req, res) {
         let cant = parte.cant;
         let tot_cajas = Math.floor(cant / cant_caja);
         let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-
+        let tot_peso = parte.peso * cant;
         ws.cell(inicio, 1, inicio + 2, 2, true).string(`${tot_pallets} Plt`).style(estiloLista);
         ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
         ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.no_parte}-${parte.descripcion}\n${tot_cajas}@${cant_caja}`).style(estiloLista);
-        ws.cell(inicio, 13, inicio + 2, 15, true).style(estiloLista);
+        ws.cell(inicio, 13, inicio + 2, 15, true).string(`${tot_peso}`).style(estiloLista);
         ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
         inicio += 3;
+        peso_total += tot_peso;
     }
     if (inicio - 3 <= 63) {
         while (inicio != 62) {
@@ -488,11 +490,14 @@ api.post('/BillOfLanding', function (req, res) {
             ws.cell(inicio, 13, inicio + 2, 15, true).style(estiloLista);
             ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
             inicio += 3;
+            if (inicio == 59) {
+                ws.cell(inicio, 5, inicio + 2, 12, true).string([{ size: 18, bold: true }, `Total: ${peso_total}`]).style(estiloLista);
+            }
         }
     }
     ws.cell(inicio, 1, inicio + 2, 2, true).style(estiloLista);
     ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
-    ws.cell(inicio, 5, inicio + 2, 12, true).string([{ bold: true, size: 14 }, `Sello: ${info.candado}   Total:544 kg`]).style(estiloLista);
+    ws.cell(inicio, 5, inicio + 2, 12, true).string([{ bold: true, size: 18 }, `Sello: ${info.candado}`]).style(estiloLista);
     ws.cell(inicio, 13, inicio + 2, 15, true).style(estiloLista);
     ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
     inicio += 3;
@@ -758,7 +763,7 @@ api.post('/BillOfLanding', function (req, res) {
             }
         }
     });
-    wb.write(path.join(__dirname,`../docs/Bill Of Landing ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
+    wb.write(path.join(__dirname, `../docs/Bill Of Landing ${info.cliente[1].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
@@ -963,7 +968,7 @@ api.post('/OrderSheet', function (req, res) {
             scaleWithDoc: true
         }
     });
-
+    
     ws.column(1).setWidth(6.57);
     ws.column(2).setWidth(5.14);
     ws.column(3).setWidth(1.14);
@@ -998,7 +1003,7 @@ api.post('/OrderSheet', function (req, res) {
 
     //Logo QMC
     ws.addImage({
-        path: path.join(__dirname,'../client/production/images/QMC_LOGO2.png'),
+        path: path.join(__dirname, '../client/production/images/QMC_LOGO2.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -1138,6 +1143,7 @@ api.post('/OrderSheet', function (req, res) {
         ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
         ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
         ws.cell(inicio, 21, inicio + 1, 23, true).string(`${tot_pallets}`).style(styleLista);
+
         inicio += 2;
     }
     if (inicio < 64) {
@@ -1185,7 +1191,7 @@ api.post('/OrderSheet', function (req, res) {
 
     //Escribir Documento
 
-    wb.write(path.join(__dirname,`../docs/Order Sheet ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
+    wb.write(path.join(__dirname, `../docs/Order Sheet ${info.cliente[1].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
@@ -1411,7 +1417,7 @@ api.post('/PackingList', function (req, res) {
     ws.cell(4, 18, 4, 21, true).string('Página 1 de 1').style(bordeado);
 
     ws.addImage({
-        path: path.join(__dirname,'../client/production/images/QMC_LOGO2.png'),
+        path: path.join(__dirname, '../client/production/images/QMC_LOGO2.png'),
         type: 'picture',
         position: {
             type: 'oneCellAnchor',
@@ -1533,10 +1539,10 @@ api.post('/PackingList', function (req, res) {
     }
 
     ws.cell(64, 1, 64, 21, true).string([{ name: 'Verdana', size: 11 }, "QMC Form NLV 12  dated: Oct 21, 2010"]).style({
-        border:{
-            top:{
-                style:'thin',
-                color:'#000000'
+        border: {
+            top: {
+                style: 'thin',
+                color: '#000000'
             }
         }
     });
@@ -1544,39 +1550,39 @@ api.post('/PackingList', function (req, res) {
     ws.cell(67, 5, 67, 6, true).string([{ name: 'Verdana', size: 7 }, "Signature"]);
     ws.cell(66, 17, 66, 21, true).style({
         border: {
-            bottom:{
-                style:'thin',
-                color:'#000000'
+            bottom: {
+                style: 'thin',
+                color: '#000000'
             }
         }
     });
     ws.cell(67, 17, 67, 21, true).string([{ name: 'Verdana', size: 9 }, "Release"]).style({
-        alignment:{
-            horizontal:'center',
-            vertical:'center'
+        alignment: {
+            horizontal: 'center',
+            vertical: 'center'
         }
     });
 
     ws.cell(71, 3, 71, 8, true).style({
         border: {
-            bottom:{
-                style:'thin',
-                color:'#000000'
+            bottom: {
+                style: 'thin',
+                color: '#000000'
             }
         }
     });
     ws.cell(71, 11, 71, 15, true).style({
         border: {
-            bottom:{
-                style:'thin',
-                color:'#000000'
+            bottom: {
+                style: 'thin',
+                color: '#000000'
             }
         }
     });
     ws.cell(72, 11, 72, 12, true).string([{ name: 'Verdana', size: 9 }, "Printed Name"]);
     ws.cell(72, 17, 72, 19, true).string([{ name: 'Verdana', size: 9 }, "Trucking Company"]);
 
-    wb.write(path.join(__dirname,`../docs/Packing List ${info.cliente[0].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
+    wb.write(path.join(__dirname, `../docs/Packing List ${info.cliente[1].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
         if (err) throw err
         else {
             res.send({ message: 'Archivo creado', status: '200' });
