@@ -3,7 +3,8 @@ var express = require('express');
 var api = express.Router();
 var path = require('path');
 const homedir = require('os').homedir();
-
+var tiempo = new Date();
+//Envíos
 api.post('/BillOfLanding', function (req, res) {
     info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -968,7 +969,7 @@ api.post('/OrderSheet', function (req, res) {
             scaleWithDoc: true
         }
     });
-    
+
     ws.column(1).setWidth(6.57);
     ws.column(2).setWidth(5.14);
     ws.column(3).setWidth(1.14);
@@ -1073,24 +1074,24 @@ api.post('/OrderSheet', function (req, res) {
         bold: true,
         size: 11,
         name: 'Arial',
-    }, info.cliente[0].nombre + "\n",
+    }, info.cliente[1].nombre + "\n",
     {
         bold: false,
         size: 11,
         name: 'Arial'
-    }, info.cliente[0].direccion
+    }, info.cliente[1].direccion
     ]).style(bordeadoJustificado);
 
     ws.cell(14, 4, 20, 14, true).string([{
         bold: true,
         size: 11,
         name: 'Arial',
-    }, info.cliente[1].nombre + "\n",
+    }, info.cliente[0].nombre + "\n",
     {
         bold: false,
         size: 11,
         name: 'Arial'
-    }, info.cliente[1].nombre
+    }, info.cliente[0].nombre
     ]).style(bordeadoJustificado);
 
     //Detalles
@@ -1116,7 +1117,7 @@ api.post('/OrderSheet', function (req, res) {
     ws.cell(13, 19, 13, 23, true).string([{ size: 11 }, "Leader Logistic"]).style(styleDetalle);
     //Encabezados de Tablas
     ws.cell(22, 1, 23, 1, true).string("NO.").style(styleEncanbezados);
-    ws.cell(22, 2, 23, 7, true).string("PARTS NUMBER").style(styleEncanbezados);
+    ws.cell(22, 2, 23, 6, true).string("PARTS NUMBER").style(styleEncanbezados);
     ws.cell(22, 7, 23, 7, true).string("QUANTITY").style(styleEncanbezados);
     ws.cell(22, 8, 23, 8, true).string("QTY/CASE").style(styleEncanbezados);
     ws.cell(22, 9, 23, 10, true).string("CASE").style(styleEncanbezados);
@@ -1126,6 +1127,7 @@ api.post('/OrderSheet', function (req, res) {
     ws.cell(22, 19, 23, 20, true).string("REF #").style(styleEncanbezados);
     ws.cell(22, 21, 23, 23, true).string("REMARKS").style(styleEncanbezados);
     let inicio = 24;
+    let cajas_total = 0;
     for (index in info.partes) {
         let parte = info.partes[index];
         let cant_caja = parte.cant_x_caja;
@@ -1133,23 +1135,23 @@ api.post('/OrderSheet', function (req, res) {
         let cant = parte.cant;
         let tot_cajas = Math.floor(cant / cant_caja);
         let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-        ws.cell(inicio, 1, inicio + 1, 1, true).string(index).style(styleLista);
-        ws.cell(inicio, 2, inicio + 1, 7, true).string(parte.no_parte).style(styleLista);
+        ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
+        ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
         ws.cell(inicio, 7, inicio + 1, 7, true).string(cant).style(styleLista);
-        ws.cell(inicio, 8, inicio + 1, 8, true).string(`${cant_caja}`).style(styleLista);
-        ws.cell(inicio, 9, inicio + 1, 10, true).string(`${tot_cajas}`).style(styleLista);
+        ws.cell(inicio, 8, inicio + 1, 8, true).string(`${tot_cajas}`).style(styleLista);
+        ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant_caja}`).style(styleLista);
         ws.cell(inicio, 11, inicio + 1, 14, true).string("0.000").style(styleLista);
         ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
         ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
         ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
-        ws.cell(inicio, 21, inicio + 1, 23, true).string(`${tot_pallets}`).style(styleLista);
-
+        ws.cell(inicio, 21, inicio + 1, 23, true).string(`1`).style(styleLista);
         inicio += 2;
+        cajas_total += tot_cajas;
     }
     if (inicio < 64) {
         while (inicio != 64) {
             ws.cell(inicio, 1, inicio + 1, 1, true).style(styleLista);
-            ws.cell(inicio, 2, inicio + 1, 7, true).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).style(styleLista);
             ws.cell(inicio, 7, inicio + 1, 7, true).style(styleLista);
             ws.cell(inicio, 8, inicio + 1, 8, true).style(styleLista);
             ws.cell(inicio, 9, inicio + 1, 10, true).style(styleLista);
@@ -1159,6 +1161,14 @@ api.post('/OrderSheet', function (req, res) {
             ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
             ws.cell(inicio, 21, inicio + 1, 23, true).style(styleLista);
             inicio += 2;
+            if (inicio == 56) {
+                ws.cell(inicio, 9, inicio + 1, 10, true).string([{ size: 14, bold: true }, 'Total Boxes:']).style(styleLista);
+                ws.cell(inicio, 11, inicio + 1, 14, true).string([{ size: 14, bold: true }, `${cajas_total}`]).style(styleLista);
+            }
+            if (inicio == 58) {
+                ws.cell(inicio, 9, inicio + 1, 10, true).string([{ size: 14, bold: true }, 'Pallet Extra:']).style(styleLista);
+                ws.cell(inicio, 11, inicio + 1, 14, true).string([{ size: 14, bold: true }, `1`]).style(styleLista);
+            }
         }
     }
     ws.cell(64, 1, 68, 11, true).string([{ sise: 9 }, `AME Form NLV 11  dated: Nov 21,  2011\n                          `, { size: 10 }, `Seal Number:${info.candado}`]).style({
@@ -1174,7 +1184,7 @@ api.post('/OrderSheet', function (req, res) {
             vertical: 'top'
         }
     });
-    ws.cell(64, 12, 68, 23, true).string([{ bold: true, size: 11 }, "Quality & Manufacturing Consulting S.C.\n", { bold: false }, "Circuito Aguascalientes Sur 115-E\nParque Industrial del Valle de Aguascalientes", { bold: true }, "C.P.", { bold: false }, "20355\nAguascalientes, Ags.", { bold: true }, "RFC: Q&M0102157F1"]).style({
+    ws.cell(64, 12, 68, 23, true).string([{ bold: true, size: 11 }, "Quality & Manufacturing Consulting S.C.\n", { bold: false }, "Circuito Aguascalientes Sur 115-E\nParque Industrial del Valle de Aguascalientes", { bold: true }, "C.P.", { bold: false }, "20355\nAguascalientes, Ags.", { bold: true }, "\nRFC: Q&M0102157F1"]).style({
         border: {
             top: {
                 style: 'thin',
@@ -1436,7 +1446,7 @@ api.post('/PackingList', function (req, res) {
         }
     });
 
-    ws.cell(5, 2, 8, 21, true).string([{ bold: true, size: 11 }, "Quality & Manufacturing Consulting S.C.\n", { bold: false }, "Circuito Aguascalientes Sur 115-E\nParque Industrial del Valle de Aguascalientes", { bold: true }, "C.P.", { bold: false }, "20355\nAguascalientes, Ags.", { bold: true }, "RFC: Q&M0102157F1"]).style({
+    ws.cell(5, 4, 8, 21, true).string([{ bold: true, size: 11 }, "Quality & Manufacturing Consulting S.C.\n", { bold: false }, "Circuito Aguascalientes Sur 115-E\nParque Industrial del Valle de Aguascalientes", { bold: true }, "\nC.P.", { bold: false }, "20355\nAguascalientes, Ags.", { bold: true }, "\nRFC: Q&M0102157F1"]).style({
         border: {
             top: {
                 style: 'thin',
@@ -1459,7 +1469,21 @@ api.post('/PackingList', function (req, res) {
     });
 
     //Clientes
-    ws.cell(11, 1, 15, 13, true).string([{ bold: true, name: 'Calibri' }, info.cliente[0].nombre + "\n", { bold: false, name: 'Calibri' }, info.cliente[0].direccion + "\n", { bold: true, name: 'Calibri' }, `RFC: ${info.cliente[0].RFC}`]).style({
+    ws.cell(11, 1, 15, 2, true).string('SHIP TO').style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+    ws.cell(16, 1, 20, 2, true).string('SUPPLIER').style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+    ws.cell(11, 3, 15, 13, true).string([{ bold: true, name: 'Calibri' }, info.cliente[1].nombre + "\n", { bold: false, name: 'Calibri' }, info.cliente[1].direccion + "\n", { bold: true, name: 'Calibri' }, `RFC: ${info.cliente[1].RFC}`]).style({
         alignment: {
             wrapText: true,
             horizontal: 'left',
@@ -1467,7 +1491,7 @@ api.post('/PackingList', function (req, res) {
         }
     });
 
-    ws.cell(16, 1, 20, 13, true).string([{ bold: true, name: 'Calibri' }, info.cliente[0].nombre + "\n", { bold: false, name: 'Calibri' }, info.cliente[0].direccion + "\n", { bold: true, name: 'Calibri' }]).style({
+    ws.cell(16, 3, 20, 13, true).string([{ bold: true, name: 'Calibri' }, info.cliente[0].nombre + "\n", { bold: false, name: 'Calibri' }, info.cliente[0].direccion + "\n", { bold: true, name: 'Calibri' }]).style({
         alignment: {
             wrapText: true,
             horizontal: 'left',
@@ -1475,26 +1499,17 @@ api.post('/PackingList', function (req, res) {
         }
     });
     //Información general
-    ws.cell(11, 15, 11, 17, true).string([{ size: 7.5 }, "DUNS NO"]).style(bordeado);
-    ws.cell(11, 18, 11, 21, true).string([{ size: 7.5 }, `N${fecha.getFullYear().toString().substr(2, 2)}${dia}`]).style(bordeado);
+    ws.cell(11, 15, 11, 17, true).string([{ size: 12 }, "DUNS NO"]).style(bordeado);
+    ws.cell(11, 18, 11, 21, true).string([{ size: 12, bold: true }, `N${fecha.getFullYear().toString().substr(2, 2)}${dia}`]).style(bordeado);
 
-    ws.cell(12, 15, 12, 17, true).string([{ size: 7.5 }, "SHIP DATE"]).style(bordeado);
-    ws.cell(12, 18, 12, 21, true).string([{ size: 7.5 }, `${mes} ${fecha.getDate()},${fecha.getFullYear()}`]).style(bordeado);
+    ws.cell(12, 15, 12, 17, true).string([{ size: 12 }, "SHIP DATE"]).style(bordeado);
+    ws.cell(12, 18, 12, 21, true).string([{ size: 12 }, `${mes} ${fecha.getDate()},${fecha.getFullYear()}`]).style(bordeado);
 
-    ws.cell(13, 15, 13, 17, true).string([{ size: 7.5 }, "BATCH RELEASER"]).style(bordeado);
-    ws.cell(13, 18, 13, 21, true).string([{ size: 7.5 }, "LUIS MACIAS"]).style(bordeado);
+    ws.cell(13, 15, 13, 17, true).string([{ size: 12 }, "BATCH RELEASER"]).style(bordeado);
+    ws.cell(13, 18, 13, 21, true).string([{ size: 12 }, "LUIS MACIAS"]).style(bordeado);
 
-    ws.cell(15, 15, 15, 17, true).string([{ size: 7.5 }, "B/L NO."]).style(bordeado);
-    ws.cell(15, 18, 15, 21, true).string([{ size: 7.5 }, `N${fecha.getFullYear().toString().substr(2, 2)}${dia}`]).style(bordeado);
-
-    ws.cell(16, 15, 16, 17, true).string([{ size: 7.5 }, "CARRIER"]).style(bordeado);
-    ws.cell(16, 18, 16, 21, true).string([{ size: 7.5 }, "INOPLAST COMPOSITIES"]).style(bordeado);
-
-    ws.cell(17, 15, 17, 17, true).string([{ size: 7.5 }, "TOTAL PALLET"]).style(bordeado);
-    ws.cell(17, 18, 17, 21, true).string([{ size: 7.5 }, "TOT_PALLET"]).style(bordeado);
-
-    ws.cell(17, 15, 17, 17, true).string([{ size: 7.5 }, "TOTAL WEIGHT"]).style(bordeado);
-    ws.cell(17, 18, 17, 21, true).string([{ size: 7.5 }, "544"]).style(bordeado);
+    ws.cell(15, 15, 15, 17, true).string([{ size: 12 }, "B/L NO."]).style(bordeado);
+    ws.cell(15, 18, 15, 21, true).string([{ size: 12, bold: true }, `N${fecha.getFullYear().toString().substr(2, 2)}${dia}`]).style(bordeado);
 
     ws.cell(22, 1, 23, 1, true).string("NO.").style(styleEncanbezados);
     ws.cell(22, 2, 23, 6, true).string("PART NUMBER").style(styleEncanbezados);
@@ -1505,6 +1520,8 @@ api.post('/PackingList', function (req, res) {
     ws.cell(22, 19, 23, 21, true).string("REMARKS").style(styleEncanbezados);
 
     let inicio = 24;
+    let tot_peso = 0;
+    let pallets_tot = 0;
     for (index in info.partes) {
         let parte = info.partes[index];
         let cant_caja = parte.cant_x_caja;
@@ -1512,13 +1529,15 @@ api.post('/PackingList', function (req, res) {
         let cant = parte.cant;
         let tot_cajas = Math.floor(cant / cant_caja);
         let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-        ws.cell(inicio, 1, inicio + 1, 1, true).string(index).style(styleLista);
+        ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
         ws.cell(inicio, 2, inicio + 1, 6, true).string(parte.no_parte).style(styleLista);
         ws.cell(inicio, 7, inicio + 1, 12, true).string(parte.descripcion).style(styleLista);
         ws.cell(inicio, 13, inicio + 1, 14, true).string(`${cant_caja}`).style(styleLista);
         ws.cell(inicio, 15, inicio + 1, 16, true).string(`${tot_cajas}`).style(styleLista);
         ws.cell(inicio, 17, inicio + 1, 18, true).string(parte.cant).style(styleLista);
-        ws.cell(inicio, 19, inicio + 1, 21, true).string(`${tot_pallets}`).style(styleLista);
+        ws.cell(inicio, 19, inicio + 1, 21, true).string(`1`).style(styleLista);
+        tot_peso += parte.peso * cant;
+        pallets_tot += tot_pallets;
         inicio += 2;
     }
 
@@ -1537,6 +1556,15 @@ api.post('/PackingList', function (req, res) {
             inicio += 2;
         }
     }
+
+    ws.cell(16, 15, 16, 17, true).string([{ size: 7.5 }, "CARRIER"]).style(bordeado);
+    ws.cell(16, 18, 16, 21, true).string([{ size: 7.5 }, info.cliente[1].rsocial]).style(bordeado);
+
+    ws.cell(17, 15, 17, 17, true).string([{ size: 7.5 }, "TOTAL PALLET"]).style(bordeado);
+    ws.cell(17, 18, 17, 21, true).string([{ size: 7.5 }, `${pallets_tot}`]).style(bordeado);
+
+    ws.cell(18, 15, 18, 17, true).string([{ size: 7.5 }, "TOTAL WEIGHT"]).style(bordeado);
+    ws.cell(18, 18, 18, 21, true).string([{ size: 7.5 }, `${tot_peso}`]).style(bordeado);
 
     ws.cell(64, 1, 64, 21, true).string([{ name: 'Verdana', size: 11 }, "QMC Form NLV 12  dated: Oct 21, 2010"]).style({
         border: {
@@ -1590,4 +1618,417 @@ api.post('/PackingList', function (req, res) {
     });
 });
 
+//Recibos
+api.post('/Receiving', function (req, res) {
+    let info = req.body;
+    let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
+    fecha.toLocaleDateString('es-MX', options);
+    let meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    let mes = meses[fecha.getMonth()];
+    let comienzo = new Date(fecha.getFullYear(), 0, 0);
+    let dif = fecha - comienzo;
+    let unDia = 1000 * 60 * 60 * 24;
+    let dia = Math.ceil(dif / unDia) - 1;
+    let wb = new xl.Workbook();
+    //Estilos
+    let styleLista = {
+        font: {
+            name: 'Arial',
+            size: 11
+        },
+        alignment: {
+            wrapText: true,
+            horizontal: 'center',
+            vertical: 'center'
+        },
+        border: {
+            left: {
+                style: 'thin',
+                color: '#000000'
+            },
+            right: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    }
+    let styleEncanbezados = {
+        alignment: {
+            wrapText: true,
+            horizontal: 'center',
+            vertical: 'center'
+        }, font: {
+            name: 'Verdana',
+            size: 6.5
+        }, border: {
+
+        }, border: {
+            left: {
+                style: 'thin',
+                color: '#000000'
+            },
+            right: {
+                style: 'thin',
+                color: '#000000'
+            },
+            top: {
+                style: 'thin',
+                color: '#000000'
+            },
+            bottom: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    }
+    let styleDetalle = {
+        alignment: {
+            wrapText: true,
+            horizontal: 'center',
+            vertical: 'center'
+        }, font: {
+            name: 'Verdana'
+        }, border: {
+
+        }, border: {
+            left: {
+                style: 'thin',
+                color: '#000000'
+            },
+            right: {
+                style: 'thin',
+                color: '#000000'
+            },
+            top: {
+                style: 'thin',
+                color: '#000000'
+            },
+            bottom: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    }
+    let bordeadoNegritas = {
+        font: {
+            bold: true,
+            name: 'Arial'
+        },
+        alignment: {
+            wrapText: true,
+            horizontal: 'center',
+            vertical: 'center'
+        },
+        border: {
+            left: {
+                style: 'thin',
+                color: '#000000'
+            },
+            right: {
+                style: 'thin',
+                color: '#000000'
+            },
+            top: {
+                style: 'thin',
+                color: '#000000'
+            },
+            bottom: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    }
+    let bordeado = {
+        font: {
+            name: 'Arial'
+        },
+        alignment: {
+            wrapText: true,
+            horizontal: 'center',
+            vertical: 'center'
+        },
+        border: {
+            left: {
+                style: 'thin',
+                color: '#000000'
+            },
+            right: {
+                style: 'thin',
+                color: '#000000'
+            },
+            top: {
+                style: 'thin',
+                color: '#000000'
+            },
+            bottom: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    }
+
+    let bordeadoJustificado = {
+        font: {
+            name: 'Arial'
+        },
+        alignment: {
+            wrapText: true,
+            horizontal: 'justify',
+            vertical: 'center'
+        }
+    }
+
+    // Encabezado
+    let ws = wb.addWorksheet('Sheet 1', {
+        pageSetup: {
+            paperSize: 'LETTER_PAPER',
+            usePrinterDefaults: true,
+            fitToWidth: 1
+        },
+        sheetView: {
+            showGridLines: false
+        },
+        margins: {
+            bottom: 0,
+            top: 0
+        },
+        headerFooter: {
+            scaleWithDoc: true
+        }
+    });
+    //Set Column Width
+    ws.column(1).setWidth(6);
+    ws.column(2).setWidth(6);
+    ws.column(3).setWidth(6);
+    ws.column(4).setWidth(6);
+    ws.column(5).setWidth(6);
+    ws.column(6).setWidth(6);
+    ws.column(7).setWidth(6);
+    ws.column(8).setWidth(6);
+    ws.column(9).setWidth(6);
+    ws.column(10).setWidth(6);
+    ws.column(11).setWidth(6);
+    ws.column(12).setWidth(6);
+    ws.column(13).setWidth(6);
+    ws.column(14).setWidth(6);
+    ws.column(15).setWidth(6);
+    ws.column(16).setWidth(6);
+    ws.column(17).setWidth(6);
+    ws.column(18).setWidth(6);
+    ws.column(19).setWidth(6);
+    ws.column(20).setWidth(6);
+    ws.column(21).setWidth(6);
+    ws.column(22).setWidth(6);
+    ws.column(23).setWidth(6);
+    ws.column(24).setWidth(6);
+    ws.column(25).setWidth(6);
+    ws.column(26).setWidth(6);
+    //Encabezado
+    ws.addImage({
+        path: path.join(__dirname, '../client/production/images/QMC_LOGO2.png'),
+        type: 'picture',
+        position: {
+            type: 'oneCellAnchor',
+            from: {
+                col: 1,
+                colOff: '0.45in',
+                row: 1,
+                rowOff: '0.05in'
+            },
+            to: {
+                col: 4,
+                colOff: '1in',
+                row: 4,
+                rowOff: 0
+            }
+        }
+    });
+    ws.cell(2, 6, 3, 15, true).string([{ size: 16, bold: true, underline: true, name: 'Bookman Old Style' }, "RECEIVING FORM"]).style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+
+    ws.cell(2, 17, 2, 18, true).string([{ size: 7.5 }, 'PAGE:']).style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+
+    ws.cell(3, 17, 3, 18, true).string([{ size: 7.5 }, 'DATE:']).style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+
+    ws.cell(2, 19, 2, 21, true).string([{ size: 7.5 }, '1']).style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+
+    ws.cell(3, 19, 3, 21, true).string([{ size: 7.5 }, 'FECHA']).style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+    //Fin encabezado
+    //Clientes
+    ws.cell(6, 1, 10, 2, true).string('RECEIVED BY:').style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+    ws.cell(11, 1, 15, 2, true).string('SUPPLIER').style({
+        wrapText: true,
+        alignment: {
+            vertical: 'center',
+            horizontal: 'center'
+        }
+    });
+    ws.cell(6, 3, 10, 11, true).string([{ bold: true, size: 10 }, "Quality & Manufacturing Consulting S.C.\n", { bold: false }, "Circuito Aguascalientes Sur 115-E\nParque Industrial del Valle de Aguascalientes", { bold: true }, "\nC.P.", { bold: false }, "20355\nAguascalientes, Ags.", { bold: true }, "\nRFC: Q&M0102157F1"]).style({
+        alignment: {
+            wrapText: true,
+            horizontal: 'left',
+            vertical: 'center'
+        }
+    });
+    ws.cell(11, 3, 15, 11, true).string([{ bold: true, name: 'Calibri' }, info.cliente.nombre + "\n", { bold: false, name: 'Calibri' }, info.cliente.direccion + "\n", { bold: true, name: 'Calibri' }]).style({
+        alignment: {
+            wrapText: true,
+            horizontal: 'left',
+            vertical: 'center'
+        }
+    })
+    //Fin clientes
+    //Metadatos
+    ws.cell(6, 14, 6, 15, true).string('ORDER REF#').style(styleEncanbezados);
+    ws.cell(7, 14, 7, 15, true).string('D/O REF#').style(styleEncanbezados);
+    ws.cell(8, 14, 8, 15, true).string('RECEIVING DATE').style(styleEncanbezados);
+    ws.cell(9, 14, 9, 15, true).string('RECEIVING TIME').style(styleEncanbezados);
+    ws.cell(10, 14, 10, 15, true).string('RECEIVE').style(styleEncanbezados);
+    ws.cell(11, 14, 11, 15, true).string('REMOVE PADLOCK').style(styleEncanbezados);
+    ws.cell(12, 14, 12, 15, true).string('MACHINERY OPERATOR').style(styleEncanbezados);
+
+    ws.cell(6, 16, 6, 21, true).string([{ bold: true }, `N${fecha.getFullYear().toString().substr(2, 2)}${dia}`]).style(bordeado);
+    ws.cell(7, 16, 7, 21, true).string(`Week ${info.semana}`).style(bordeado);
+    ws.cell(8, 16, 8, 21, true).string(`${mes} ${fecha.getDate()},${fecha.getFullYear()}`).style(bordeado);
+    ws.cell(9, 16, 9, 21, true).string(`${tiempo.getHours()}:${tiempo.getMinutes()}`).style(bordeado);
+    ws.cell(10, 16, 10, 21, true).string('LUIS MACIAS').style(bordeado);
+    ws.cell(11, 16, 11, 21, true).string('LUIS MACIAS').style(bordeado);
+    ws.cell(12, 16, 12, 21, true).string(info.operario).style(bordeado);
+    //Fin Metadatos
+
+    //Encabezados de Lista
+    ws.cell(17, 1, 18, 1, true).string('NO.').style(styleEncanbezados);
+    ws.cell(17, 2, 18, 6, true).string('PARTS NUMBER').style(styleEncanbezados);
+    ws.cell(17, 7, 18, 8, true).string('QUANTIY').style(styleEncanbezados);
+    ws.cell(17, 9, 18, 10, true).string('QTY/CASE').style(styleEncanbezados);
+    ws.cell(17, 11, 18, 12, true).string('CASE').style(styleEncanbezados);
+    ws.cell(17, 13, 18, 14, true).string('PRICE').style(styleEncanbezados);
+    ws.cell(17, 15, 18, 16, true).string('MODL YEAR').style(styleEncanbezados);
+    ws.cell(17, 17, 18, 18, true).string('ORDER #').style(styleEncanbezados);
+    ws.cell(17, 19, 18, 19, true).string('REF#').style(styleEncanbezados);
+    ws.cell(17, 20, 18, 21, true).string('REMARKS').style(styleEncanbezados);
+    //Fin de Encabezados de Lista
+
+    //Cuerpo de Llista
+
+    let inicio = 19;
+    let pallets_tot = 0;
+    let cajas_tot = 0;
+    for (index in info.partes) {
+        let parte = info.partes[index];
+        let cant_caja = parte.cant_x_caja;
+        let cant_pallet = parte.cant_x_pallet;
+        let cant = parte.cant;
+        let tot_cajas = Math.floor(cant / cant_caja);
+        let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+        ws.cell(inicio, 1, inicio + 1, 1, true).string(`0${parseInt(index) + 1}`).style(styleLista);
+        ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
+        ws.cell(inicio, 7, inicio + 1, 8, true).string(`${cant}`).style(styleLista);
+        ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant_caja}`).style(styleLista);
+        ws.cell(inicio, 11, inicio + 1, 12, true).string(`${tot_cajas}`).style(styleLista);
+        ws.cell(inicio, 13, inicio + 1, 14, true).style(styleLista);
+        ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
+        ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
+        ws.cell(inicio, 19, inicio + 1, 19, true).style(styleLista);
+        ws.cell(inicio, 20, inicio + 1, 21, true).string(`${tot_pallets}`).style(styleLista);
+        inicio += 2;
+        pallets_tot += tot_pallets;
+        cajas_tot += tot_cajas;
+    }
+    //Fin de Cuerpo de Lista
+    //Inicio de Relleno
+    if (inicio != 69) {
+        while (inicio <= 69) {
+            ws.cell(inicio, 1, inicio + 1, 1, true).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).style(styleLista);
+            ws.cell(inicio, 7, inicio + 1, 8, true).style(styleLista);
+            ws.cell(inicio, 9, inicio + 1, 10, true).style(styleLista);
+            ws.cell(inicio, 11, inicio + 1, 12, true).style(styleLista);
+            ws.cell(inicio, 13, inicio + 1, 14, true).style(styleLista);
+            ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
+            ws.cell(inicio, 17, inicio + 1, 18, true).style(styleLista);
+            ws.cell(inicio, 19, inicio + 1, 19, true).style(styleLista);
+            ws.cell(inicio, 20, inicio + 1, 21, true).style(styleLista);
+            inicio += 2;
+        }
+    }
+    ws.cell(49, 2, 50, 6, true).string([{ size: 11 }, `Container: ${info.id_contenedor}`]).style(styleLista);
+    ws.cell(51, 2, 52, 6, true).string([{ size: 11 }, `Padlock: ${info.id_candado}`]).style(styleLista);
+    ws.cell(53, 2, 54, 6, true).string([{ size: 11 }, `Invoice: ${info.factura}`]).style(styleLista);
+    ws.cell(55, 2, 56, 6, true).string([{ size: 11 }, `Pedimento: ${info.pedimento}`]).style(styleLista);
+
+    ws.cell(57, 9, 58, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Pallets`]).style(styleLista);
+    ws.cell(59, 9, 60, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Box`]).style(styleLista);
+    ws.cell(57, 11, 58, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${pallets_tot}`]).style(styleLista);
+    ws.cell(59, 11, 60, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${cajas_tot}`]).style(styleLista);
+    //Fin de Relleno
+    //Pie de Documento
+
+    ws.cell(71, 1, 71, 11, true).string([{ size: 9, bold: false, name: 'Verdana' }, `AME Form NLV 11  dated: May 04,  2011`]).style({
+        border: {
+            top: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    });
+    ws.cell(71, 12, 75, 21, true).string([{ bold: true, size: 11 }, "Quality & Manufacturing Consulting S.C.\n", { bold: false }, "Circuito Aguascalientes Sur 115-E\nParque Industrial del Valle de Aguascalientes", { bold: true }, "\nC.P.", { bold: false }, "20355\nAguascalientes, Ags.", { bold: true }, "\nRFC: Q&M0102157F1"]).style({
+        alignment: {
+            wrapText: true,
+            horizontal: 'left',
+            vertical: 'center'
+        }
+    }).style({
+        border: {
+            top: {
+                style: 'thin',
+                color: '#000000'
+            }
+        }
+    });
+
+    //Fin de Pie de Docuemtno
+    wb.write(path.join(__dirname, `../docs/Receiving ${info.cliente.nombre} Week ${info.semana}.xlsx`), function (err) {
+        if (err) throw err
+        else {
+            res.send({ message: 'Archivo creado', status: '200' });
+        }
+    });
+});
 module.exports = api;

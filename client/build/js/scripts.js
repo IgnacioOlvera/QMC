@@ -150,6 +150,8 @@ async function initInicio() {
 }
 //Función para incializar en la sección de recibo
 async function initRecibo() {
+    let info = {};
+    let partesRecibo = [];
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
     $('#color').on('change', function () {
         let color = $(this).val();
@@ -219,12 +221,13 @@ async function initRecibo() {
         count = 1;
     });
     $('#terminarRecibo').on('click', async function () {//Enviar todas las filas para realzar movimientos en la base de datos.
+        info = $("#form1").serializeObject();
         let cantidades = t.$('.cantidad').serialize();//Obtener una cadena con todos los valores de los inputs de cantidades.
         cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");//Quitar de la cadena cant_parte y separarlos por &
         t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
             if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
                 let a = $("#form1").serializeObject();//convertir los elementos del form en un objeto json.
-                let data = this.data();//data de la fila
+                let data = this.data();//data de la fila                
                 a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
                 a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
                 a = JSON.stringify(a);//Convertir a cadena el json
@@ -239,13 +242,54 @@ async function initRecibo() {
                 t.$('label').text('0');//regresar las cantidades a sus valores iniciales
                 if (res.status == 200) {
                     $.notify(res.message, "success");//mensaje del backend
+                    let p = await fetch(`/parte/${data[0]}`);
+                    let r = await p.json();
+                    let part = r[0];
+                    part.cant = cantidades[rowIdx];
+                    partesRecibo.push(part);
                 } else {
                     $.notify(res.message);
                 }
             }
+            info.partes = JSON.parse(JSON.stringify(partesRecibo));
+
         });
+
+        let pet = await fetch(`/cliente/${info.id_proveedor}`);
+        let proveedor = await pet.json();
+        info.cliente = JSON.parse(JSON.stringify(proveedor[0]));
+        info.semana = moment(info.fecha, 'DD/MM/YYYY').week();
+        $('#DetallesRecibo').modal('toggle');
     });
 
+
+    $('#SetDetalles').on('click', function () {
+        let d = $('#ReciboDetalleForm').serializeObject();
+        if (d.pedimento != "" && d.factura != "" && d.operario != "") {
+            if (info.partes.length > 0) {
+                $('#generarDocumentacion').removeAttr('disabled');
+            }
+            info.pedimento = d.pedimento;
+            info.factura = d.factura;
+            info.operario = d.operario;
+            $('#DetallesRecibo').modal('toggle');
+        } else {
+            $.notify("Faltan Campos Obligatorios y/o Válidos");
+        }
+    });
+    $('#generarDocumentacion').on('click', async function () {
+        let url = '/Receiving';
+        let options = {//opciones para la petición
+            method: 'POST',
+            body: JSON.stringify(info),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let ROK = pet.json();
+        $(this).attr('disabled', true);
+        info = {};
+        partesRecibo = [];
+    });
     $('#terminarReciboCostales').on('click', function () {//Evento para terminar los recibos de contales
         let pesos = tnet.$('.peso').serialize().replace(/peso=/gi, "").split("&");//obtener los pesos de los costales.
         let seriales = tnet.$('.serial').serialize().replace(/serial=/gi, "").split("&");//obenter los seriales de los costales
@@ -273,6 +317,11 @@ async function initRecibo() {
             }
 
         });
+    });
+    $('#generarDocumentacion').on('click', async function () {
+
+        //Deshabilitar botón
+        $(this).attr('disabled', true);
     });
 }
 async function initEnvios() {
@@ -400,7 +449,7 @@ async function initEnvios() {
                             part.descripcion = r[0].descripcion;
                             part.cant_x_caja = r[0].cant_x_caja;
                             part.cant_x_pallet = r[0].cant_x_pallet;
-                            part.peso=r[0].peso;
+                            part.peso = r[0].peso;
                             partesEnvio.push(part);
                             count = 0;
                         } else {
@@ -449,6 +498,7 @@ async function initEnvios() {
         //Deshabilitar botón
         $(this).attr('disabled', true);
         BLinfo = {};
+        partesEnvio = [];
 
 
     });
