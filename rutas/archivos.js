@@ -2,7 +2,7 @@ var xl = require('excel4node');
 var express = require('express');
 var api = express.Router();
 var path = require('path');
-const homedir = require('os').homedir();
+const os = require('os');
 var tiempo = new Date();
 //Envíos
 api.post('/BillOfLanding', function (req, res) {
@@ -467,21 +467,45 @@ api.post('/BillOfLanding', function (req, res) {
     }
     let inicio = 35;
     let peso_total = 0;
-    for (i in info.partes) {
-        let parte = info.partes[i];
-        let cant_caja = parte.cant_x_caja;
-        let cant_pallet = parte.cant_x_pallet;
-        let cant = parte.cant;
-        let tot_cajas = Math.floor(cant / cant_caja);
-        let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-        let tot_peso = parte.peso * cant;
-        ws.cell(inicio, 1, inicio + 2, 2, true).string(`${tot_pallets} Plt`).style(estiloLista);
-        ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
-        ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.no_parte}-${parte.descripcion}\n${tot_cajas}@${cant_caja}`).style(estiloLista);
-        ws.cell(inicio, 13, inicio + 2, 15, true).string(`${tot_peso}`).style(estiloLista);
-        ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
-        inicio += 3;
-        peso_total += tot_peso;
+    if (info.cliente[0].id_cliente == 4) {
+        ws.cell(24, 4, 32, 11, true).string([{
+            bold: true,
+            size: 11,
+            name: 'Arial',
+        }, `T-NET INTERNATIONAL (EU) GMBH\n`,
+        {
+            bold: false,
+            size: 11,
+            name: 'Arial'
+        }, `Blvd. Pase de los Chicahuales\nCorral de Barrancos\nJesús María, Aguascalientes C.P.20900`, { bold: true }, `\nRFC:${info.cliente[1].RFC}`
+        ]).style(bordeadoJustificado);
+        for (i in info.partes) {
+            let parte = info.partes[i];
+            ws.cell(inicio, 1, inicio + 2, 2, true).string(`1 Plt`).style(estiloLista);
+            ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
+            ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.descripcion}-${parte.no_parte}\n1 Pallet@${parte.peso}`).style(estiloLista);
+            ws.cell(inicio, 13, inicio + 2, 15, true).style(estiloLista);
+            ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
+            inicio += 3;
+            peso_total += parseInt(parte.peso);
+        }
+    } else {
+        for (i in info.partes) {
+            let parte = info.partes[i];
+            let cant_caja = parte.cant_x_caja;
+            let cant_pallet = parte.cant_x_pallet;
+            let cant = parte.cant;
+            let tot_cajas = Math.floor(cant / cant_caja);
+            let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+            let tot_peso = parte.peso * cant;
+            ws.cell(inicio, 1, inicio + 2, 2, true).string(`${tot_pallets} Plt`).style(estiloLista);
+            ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
+            ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.no_parte}-${parte.descripcion}\n${tot_cajas}@${cant_caja}`).style(estiloLista);
+            ws.cell(inicio, 13, inicio + 2, 15, true).string(`${tot_peso}`).style(estiloLista);
+            ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
+            inicio += 3;
+            peso_total += tot_peso;
+        }
     }
     if (inicio - 3 <= 63) {
         while (inicio != 62) {
@@ -1091,7 +1115,7 @@ api.post('/OrderSheet', function (req, res) {
         bold: false,
         size: 11,
         name: 'Arial'
-    }, info.cliente[0].nombre
+    }, info.cliente[0].direccion, { bold: true }, `\nRFC:${info.cliente[0].RFC}`
     ]).style(bordeadoJustificado);
 
     //Detalles
@@ -1128,25 +1152,43 @@ api.post('/OrderSheet', function (req, res) {
     ws.cell(22, 21, 23, 23, true).string("REMARKS").style(styleEncanbezados);
     let inicio = 24;
     let cajas_total = 0;
-    for (index in info.partes) {
-        let parte = info.partes[index];
-        let cant_caja = parte.cant_x_caja;
-        let cant_pallet = parte.cant_x_pallet;
-        let cant = parte.cant;
-        let tot_cajas = Math.floor(cant / cant_caja);
-        let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-        ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
-        ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
-        ws.cell(inicio, 7, inicio + 1, 7, true).string(cant).style(styleLista);
-        ws.cell(inicio, 8, inicio + 1, 8, true).string(`${tot_cajas}`).style(styleLista);
-        ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant_caja}`).style(styleLista);
-        ws.cell(inicio, 11, inicio + 1, 14, true).string("0.000").style(styleLista);
-        ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
-        ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
-        ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
-        ws.cell(inicio, 21, inicio + 1, 23, true).string(`1`).style(styleLista);
-        inicio += 2;
-        cajas_total += tot_cajas;
+    if (info.cliente[0].id_cliente == 4) {
+        for (index in info.partes) {
+            let parte = info.partes[index];
+            ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
+            ws.cell(inicio, 7, inicio + 1, 7, true).string(`${parte.peso}`).style(styleLista);
+            ws.cell(inicio, 8, inicio + 1, 8, true).string(`${parte.peso}`).style(styleLista);
+            ws.cell(inicio, 9, inicio + 1, 10, true).string(`1`).style(styleLista);
+            ws.cell(inicio, 11, inicio + 1, 14, true).string("0.000").style(styleLista);
+            ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
+            ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
+            ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
+            ws.cell(inicio, 21, inicio + 1, 23, true).string(`1.00`).style(styleLista);
+            inicio += 2;
+            cajas_total += 1;
+        }
+    } else {
+        for (index in info.partes) {
+            let parte = info.partes[index];
+            let cant_caja = parte.cant_x_caja;
+            let cant_pallet = parte.cant_x_pallet;
+            let cant = parte.cant;
+            let tot_cajas = Math.floor(cant / cant_caja);
+            let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+            ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
+            ws.cell(inicio, 7, inicio + 1, 7, true).string(cant).style(styleLista);
+            ws.cell(inicio, 8, inicio + 1, 8, true).string(`${tot_cajas}`).style(styleLista);
+            ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant_caja}`).style(styleLista);
+            ws.cell(inicio, 11, inicio + 1, 14, true).string("0.000").style(styleLista);
+            ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
+            ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
+            ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
+            ws.cell(inicio, 21, inicio + 1, 23, true).string(`${tot_pallets}`).style(styleLista);
+            inicio += 2;
+            cajas_total += tot_cajas;
+        }
     }
     if (inicio < 64) {
         while (inicio != 64) {
@@ -1275,34 +1317,7 @@ api.post('/PackingList', function (req, res) {
             }
         }
     }
-    let styleDetalle = {
-        alignment: {
-            wrapText: true,
-            horizontal: 'center',
-            vertical: 'center'
-        }, font: {
-            name: 'Verdana'
-        }, border: {
 
-        }, border: {
-            left: {
-                style: 'thin',
-                color: '#000000'
-            },
-            right: {
-                style: 'thin',
-                color: '#000000'
-            },
-            top: {
-                style: 'thin',
-                color: '#000000'
-            },
-            bottom: {
-                style: 'thin',
-                color: '#000000'
-            }
-        }
-    }
     let bordeadoNegritas = {
         font: {
             bold: true,
@@ -1360,18 +1375,6 @@ api.post('/PackingList', function (req, res) {
             }
         }
     }
-
-    let bordeadoJustificado = {
-        font: {
-            name: 'Arial'
-        },
-        alignment: {
-            wrapText: true,
-            horizontal: 'justify',
-            vertical: 'center'
-        }
-    }
-
     // Encabezado
     let ws = wb.addWorksheet('Sheet 1', {
         pageSetup: {
@@ -1522,24 +1525,49 @@ api.post('/PackingList', function (req, res) {
     let inicio = 24;
     let tot_peso = 0;
     let pallets_tot = 0;
-    for (index in info.partes) {
-        let parte = info.partes[index];
-        let cant_caja = parte.cant_x_caja;
-        let cant_pallet = parte.cant_x_pallet;
-        let cant = parte.cant;
-        let tot_cajas = Math.floor(cant / cant_caja);
-        let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-        ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
-        ws.cell(inicio, 2, inicio + 1, 6, true).string(parte.no_parte).style(styleLista);
-        ws.cell(inicio, 7, inicio + 1, 12, true).string(parte.descripcion).style(styleLista);
-        ws.cell(inicio, 13, inicio + 1, 14, true).string(`${cant_caja}`).style(styleLista);
-        ws.cell(inicio, 15, inicio + 1, 16, true).string(`${tot_cajas}`).style(styleLista);
-        ws.cell(inicio, 17, inicio + 1, 18, true).string(parte.cant).style(styleLista);
-        ws.cell(inicio, 19, inicio + 1, 21, true).string(`1`).style(styleLista);
-        tot_peso += parte.peso * cant;
-        pallets_tot += tot_pallets;
-        inicio += 2;
+    if (info.cliente[0].id_cliente == 4) {
+        ws.cell(16, 18, 16, 21, true).string([{ size: 7.5 }, `P. HERMANN`]).style(bordeado);
+        for (index in info.partes) {
+            let parte = info.partes[index];
+            let cant_caja = parte.cant_x_caja;
+            let cant_pallet = parte.cant_x_pallet;
+            let cant = parte.cant;
+            let tot_cajas = Math.floor(cant / cant_caja);
+            let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+            ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).string(parte.no_parte).style(styleLista);
+            ws.cell(inicio, 7, inicio + 1, 12, true).string(parte.descripcion).style(styleLista);
+            ws.cell(inicio, 13, inicio + 1, 14, true).string(`1`).style(styleLista);
+            ws.cell(inicio, 15, inicio + 1, 16, true).string(`${parte.peso}`).style(styleLista);
+            ws.cell(inicio, 17, inicio + 1, 18, true).string(`${parte.peso}`).style(styleLista);
+            ws.cell(inicio, 19, inicio + 1, 21, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
+            tot_peso += parseInt(parte.peso);
+            pallets_tot += 1;
+            inicio += 2;
+            
+        }
+    } else {
+        for (index in info.partes) {
+            let parte = info.partes[index];
+            let cant_caja = parte.cant_x_caja;
+            let cant_pallet = parte.cant_x_pallet;
+            let cant = parte.cant;
+            let tot_cajas = Math.floor(cant / cant_caja);
+            let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+            ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).string(parte.no_parte).style(styleLista);
+            ws.cell(inicio, 7, inicio + 1, 12, true).string(parte.descripcion).style(styleLista);
+            ws.cell(inicio, 13, inicio + 1, 14, true).string(`${cant_caja}`).style(styleLista);
+            ws.cell(inicio, 15, inicio + 1, 16, true).string(`${tot_cajas}`).style(styleLista);
+            ws.cell(inicio, 17, inicio + 1, 18, true).string(parte.cant).style(styleLista);
+            ws.cell(inicio, 19, inicio + 1, 21, true).string(`1`).style(styleLista);
+            tot_peso += parte.peso * cant;
+            pallets_tot += tot_pallets;
+            inicio += 2;
+            ws.cell(16, 18, 16, 21, true).string([{ size: 7.5 }, info.cliente[1].rsocial]).style(bordeado);
+        }
     }
+
 
     if (inicio < 64) {
         while (inicio < 64) {
@@ -1558,12 +1586,12 @@ api.post('/PackingList', function (req, res) {
     }
 
     ws.cell(16, 15, 16, 17, true).string([{ size: 7.5 }, "CARRIER"]).style(bordeado);
-    ws.cell(16, 18, 16, 21, true).string([{ size: 7.5 }, info.cliente[1].rsocial]).style(bordeado);
+    
 
     ws.cell(17, 15, 17, 17, true).string([{ size: 7.5 }, "TOTAL PALLET"]).style(bordeado);
     ws.cell(17, 18, 17, 21, true).string([{ size: 7.5 }, `${pallets_tot}`]).style(bordeado);
 
-    ws.cell(18, 15, 18, 17, true).string([{ size: 7.5 }, "TOTAL WEIGHT"]).style(bordeado);
+    ws.cell(18, 15, 18, 17, true).string([{ size: 7.5 }, "TOTAL WEIGHT (Kg)"]).style(bordeado);
     ws.cell(18, 18, 18, 21, true).string([{ size: 7.5 }, `${tot_peso}`]).style(bordeado);
 
     ws.cell(64, 1, 64, 21, true).string([{ name: 'Verdana', size: 11 }, "QMC Form NLV 12  dated: Oct 21, 2010"]).style({
@@ -1682,63 +1710,7 @@ api.post('/Receiving', function (req, res) {
             }
         }
     }
-    let styleDetalle = {
-        alignment: {
-            wrapText: true,
-            horizontal: 'center',
-            vertical: 'center'
-        }, font: {
-            name: 'Verdana'
-        }, border: {
 
-        }, border: {
-            left: {
-                style: 'thin',
-                color: '#000000'
-            },
-            right: {
-                style: 'thin',
-                color: '#000000'
-            },
-            top: {
-                style: 'thin',
-                color: '#000000'
-            },
-            bottom: {
-                style: 'thin',
-                color: '#000000'
-            }
-        }
-    }
-    let bordeadoNegritas = {
-        font: {
-            bold: true,
-            name: 'Arial'
-        },
-        alignment: {
-            wrapText: true,
-            horizontal: 'center',
-            vertical: 'center'
-        },
-        border: {
-            left: {
-                style: 'thin',
-                color: '#000000'
-            },
-            right: {
-                style: 'thin',
-                color: '#000000'
-            },
-            top: {
-                style: 'thin',
-                color: '#000000'
-            },
-            bottom: {
-                style: 'thin',
-                color: '#000000'
-            }
-        }
-    }
     let bordeado = {
         font: {
             name: 'Arial'
@@ -1768,16 +1740,6 @@ api.post('/Receiving', function (req, res) {
         }
     }
 
-    let bordeadoJustificado = {
-        font: {
-            name: 'Arial'
-        },
-        alignment: {
-            wrapText: true,
-            horizontal: 'justify',
-            vertical: 'center'
-        }
-    }
 
     // Encabezado
     let ws = wb.addWorksheet('Sheet 1', {
@@ -1953,10 +1915,10 @@ api.post('/Receiving', function (req, res) {
     for (index in info.partes) {
         let parte = info.partes[index];
         let cant_caja = parte.cant_x_caja;
-        let cant_pallet = parte.cant_x_pallet;
+        let cant_pallet = parte.cant_x_pallet || null;
         let cant = parte.cant;
-        let tot_cajas = Math.floor(cant / cant_caja);
-        let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+        let tot_cajas = Math.floor(cant / cant_caja) || parte.cant;
+        let tot_pallets = (cant_pallet != null) ? Math.floor(tot_cajas / cant_pallet) : parte.remarks;
         ws.cell(inicio, 1, inicio + 1, 1, true).string(`0${parseInt(index) + 1}`).style(styleLista);
         ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
         ws.cell(inicio, 7, inicio + 1, 8, true).string(`${cant}`).style(styleLista);
@@ -1992,11 +1954,13 @@ api.post('/Receiving', function (req, res) {
     ws.cell(51, 2, 52, 6, true).string([{ size: 11 }, `Padlock: ${info.id_candado}`]).style(styleLista);
     ws.cell(53, 2, 54, 6, true).string([{ size: 11 }, `Invoice: ${info.factura}`]).style(styleLista);
     ws.cell(55, 2, 56, 6, true).string([{ size: 11 }, `Pedimento: ${info.pedimento}`]).style(styleLista);
+    if (info.cliente.id_cliente != 4) {
+        ws.cell(57, 9, 58, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Pallets`]).style(styleLista);
+        ws.cell(59, 9, 60, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Box`]).style(styleLista);
+        ws.cell(57, 11, 58, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${pallets_tot}`]).style(styleLista);
+        ws.cell(59, 11, 60, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${cajas_tot}`]).style(styleLista);
+    }
 
-    ws.cell(57, 9, 58, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Pallets`]).style(styleLista);
-    ws.cell(59, 9, 60, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Box`]).style(styleLista);
-    ws.cell(57, 11, 58, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${pallets_tot}`]).style(styleLista);
-    ws.cell(59, 11, 60, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${cajas_tot}`]).style(styleLista);
     //Fin de Relleno
     //Pie de Documento
 
@@ -2031,4 +1995,6 @@ api.post('/Receiving', function (req, res) {
         }
     });
 });
+
+
 module.exports = api;

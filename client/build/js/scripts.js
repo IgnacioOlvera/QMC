@@ -263,36 +263,27 @@ async function initRecibo() {
     });
 
 
-    $('#SetDetalles').on('click', function () {
-        let d = $('#ReciboDetalleForm').serializeObject();
-        if (d.pedimento != "" && d.factura != "" && d.operario != "") {
-            if (info.partes.length > 0) {
-                $('#generarDocumentacion').removeAttr('disabled');
-            }
-            info.pedimento = d.pedimento;
-            info.factura = d.factura;
-            info.operario = d.operario;
-            $('#DetallesRecibo').modal('toggle');
-        } else {
-            $.notify("Faltan Campos Obligatorios y/o Válidos");
-        }
-    });
-    $('#generarDocumentacion').on('click', async function () {
-        let url = '/Receiving';
-        let options = {//opciones para la petición
-            method: 'POST',
-            body: JSON.stringify(info),
-            headers: { "Content-Type": "application/json" }
-        }
-        let pet = await fetch(url, options);
-        let ROK = pet.json();
-        $(this).attr('disabled', true);
-        info = {};
-        partesRecibo = [];
-    });
-    $('#terminarReciboCostales').on('click', function () {//Evento para terminar los recibos de contales
+
+
+    $('#terminarReciboCostales').on('click', async function () {//Evento para terminar los recibos de contales
+
+        info = $("#form1").serializeObject();
         let pesos = tnet.$('.peso').serialize().replace(/peso=/gi, "").split("&");//obtener los pesos de los costales.
         let seriales = tnet.$('.serial').serialize().replace(/serial=/gi, "").split("&");//obenter los seriales de los costales
+
+        for (let i = 0; i < pesos.length - 1; i++) {
+            for (let j = i + 1; j < pesos.length; j++) {
+                if (pesos[i] > pesos[j]) {
+                    let tempP = pesos[i];
+                    let tempS = seriales[i];
+                    pesos[i] = pesos[j];
+                    seriales[i] = seriales[j];
+                    pesos[j] = tempP;
+                    seriales[j] = tempS;
+                }
+
+            }
+        }
         tnet.rows().every(async function (rowIdx, tableLoop, rowLoop) {
             let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
             let color = $('#color').val();//Obtener la información de la línea recorrida
@@ -315,13 +306,62 @@ async function initRecibo() {
                 $.notify(res.message);
                 count = 1;
             }
-
         });
-    });
-    $('#generarDocumentacion').on('click', async function () {
 
-        //Deshabilitar botón
+        let peso = pesos[0];
+        let cant_x_caja = 0;
+        for (let i = 0; i <= pesos.length; i++) {
+            if (peso != pesos[i]) {
+                partesRecibo.push({
+                    no_parte: `HDPE MOLIDO LAVADO`,
+                    cant: peso * cant_x_caja,
+                    cant_x_caja: cant_x_caja,
+                    remarks: `LEAF CORP.`
+
+                });
+                peso = pesos[i];
+                cant_x_caja = 0;
+            }
+            cant_x_caja++;
+        }
+        info.partes = JSON.parse(JSON.stringify(partesRecibo));
+        let pet = await fetch(`/cliente/${info.id_proveedor}`);
+        let proveedor = await pet.json();
+        info.cliente = JSON.parse(JSON.stringify(proveedor[0]));
+        info.semana = moment(info.fecha, 'DD/MM/YYYY').week();
+        $('#DetallesRecibo').modal('toggle');
+
+    });
+
+    $('#SetDetalles').on('click', function () {
+        let d = $('#ReciboDetalleForm').serializeObject();
+        console.log(info);
+        if (d.pedimento != "" && d.factura != "" && d.operario != "") {
+            if (info.partes.length > 0) {
+                $('#generarDocumentacion').removeAttr('disabled');
+            }
+            info.pedimento = d.pedimento;
+            info.factura = d.factura;
+            info.operario = d.operario;
+            $('#DetallesRecibo').modal('toggle');
+        } else {
+            $.notify("Faltan Campos Obligatorios y/o Válidos");
+        }
+    });
+
+    $('#generarDocumentacion').on('click', async function () {
+        let url = '/Receiving';
+        let options = {//opciones para la petición
+            method: 'POST',
+            body: JSON.stringify(info),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let ROK = pet.json();
         $(this).attr('disabled', true);
+        info = {};
+        partesRecibo = [];
+        console.log(info);
     });
 }
 async function initEnvios() {
@@ -466,45 +506,19 @@ async function initEnvios() {
         }
 
     });
-    $('#generarDocumentacion').on('click', async function () {
-        //Generar Bill Of Landing
-        let url = '/BillOfLanding';
-        let options = {//opciones para la petición
-            method: 'POST',
-            body: JSON.stringify(BLinfo),
-            headers: { "Content-Type": "application/json" }
-        }
-        let pet = await fetch(url, options);
-        let BLOK = await pet.json();
-        //Generar Order Sheet
-        let url1 = '/OrderSheet';
-        let o = {
-            method: 'POST',
-            body: JSON.stringify(BLinfo),
-            headers: { "Content-Type": "application/json" }
-        }
-        let pet1 = await fetch(url1, o);
-        let OSOK = await pet1.json();
-        //Generar Packing List
-        let url2 = '/PackingList';
-        let p = {
-            method: 'POST',
-            body: JSON.stringify(BLinfo),
-            headers: { "Content-Type": "application/json" }
-        }
-        let pet2 = await fetch(url2, p);
-        let PLOK = await pet2.json();
-
-        //Deshabilitar botón
-        $(this).attr('disabled', true);
-        BLinfo = {};
-        partesEnvio = [];
-
-
-    });
-    $('#terminarReciboCostales').on('click', function () {//Evento para terminar los recibos de contales
+    $('#terminarReciboCostales').on('click', async function () {//Evento para terminar los recibos de contales
+        let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
+        BLinfo.destino = a.id_destino;
+        BLinfo.candado = a.candado;
+        BLinfo.contenedor = a.contenedor;
+        BLinfo.fecha = a.fecha;
+        BLinfo.semana = moment(a.fecha, 'DD/MM/YYYY').week();
+        let direc = `/cliente/${a.id_destino}/${a.id_proveedor}`;
+        let f = await fetch(direc);
+        let i = await f.json();
+        BLinfo.cliente = JSON.parse(JSON.stringify(i));
+        let costalesEnvio = [];
         $('#piezasTNET > tbody  > tr > td > .checked').each(async function () {
-            let a = $("#form1").serializeObject();//Convertir a json los objetos de la forma
             if (a.id_destino != 0 && a.id_cliente != 0 && a.fecha != 0) {
                 var datos = [];
                 var row = tnet.row($(this).parents('tr'));
@@ -516,25 +530,71 @@ async function initEnvios() {
                 a.peso = datos[1]//setear peso en el json la secuencia del costal
                 a.cant_parte = "1";//setear la cantidad de partes
                 a.nota = datos[2];
-                a = JSON.stringify(a);//convertir en string  el objeto json para pasarlo al bakend
+                //convertir en string  el objeto json para pasarlo al bakend
                 let options = {//opciones de la petición
                     method: 'POST',
-                    body: a,
+                    body: JSON.stringify(a),
                     headers: { "Content-Type": "application/json" }
                 }
                 let c = await fetch('/salidas', options);//petición
                 let res = await c.json();
                 if (res.status == 200) {
                     $.notify(res.message, "success");//mensaje del backend
+                    $('#generarDocumentacion').attr('disabled', false);
                     cont = 0;
+                    costalesEnvio.push({
+                        no_parte: datos[0],
+                        descripcion: `HPDE MOLIDO LAVADO`,
+                        peso: datos[2]
+                    });
+                    BLinfo.partes = JSON.parse(JSON.stringify(costalesEnvio));
                 } else {
                     $.notify(res.message);
                 }
+
             } else {
                 $.notify("Falta Proporcionar Datos Obligatorios (*)");
                 cont = 0;
             }
+
         });
+    });
+    $('#generarDocumentacion').on('click', async function () {
+        //Generar Bill Of Landing
+        let url = '/BillOfLanding';
+        let options = {//opciones para la petición
+            method: 'POST',
+            body: JSON.stringify(BLinfo),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch(url, options);
+        let BLOK = await pet.json();
+        // //Generar Order Sheet
+        let url1 = '/OrderSheet';
+        let o = {
+            method: 'POST',
+            body: JSON.stringify(BLinfo),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet1 = await fetch(url1, o);
+        let OSOK = await pet1.json();
+        // //Generar Packing List
+        let url2 = '/PackingList';
+        let p = {
+            method: 'POST',
+            body: JSON.stringify(BLinfo),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet2 = await fetch(url2, p);
+        let PLOK = await pet2.json();
+        //Deshabilitar botón
+        $(this).attr('disabled', true);
+        BLinfo = {};
+        if (BLOK.status == 200 && OSOK.status == 200 && PLOK.status == 200) {
+            $.notify('Documentación Generada Satisfactoriamente', 'success');
+        }
+
+
     });
 }
 async function initPartes() {
