@@ -222,44 +222,49 @@ async function initRecibo() {
     });
     $('#terminarRecibo').on('click', async function () {//Enviar todas las filas para realzar movimientos en la base de datos.
         info = $("#form1").serializeObject();
-        let cantidades = t.$('.cantidad').serialize();//Obtener una cadena con todos los valores de los inputs de cantidades.
-        cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");//Quitar de la cadena cant_parte y separarlos por &
-        t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
-            if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
-                let a = $("#form1").serializeObject();//convertir los elementos del form en un objeto json.
-                let data = this.data();//data de la fila                
-                a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
-                a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
-                a = JSON.stringify(a);//Convertir a cadena el json
-                let options = {//opciones para la petición
-                    method: 'POST',
-                    body: a,
-                    headers: { "Content-Type": "application/json" }
+        console.log(info);
+        if (info.id_proveedor != 0 && info.fecha != null && info.id_contenedor != null && info.id_candado != null && info.id_nota != null) {
+            let cantidades = t.$('.cantidad').serialize();//Obtener una cadena con todos los valores de los inputs de cantidades.
+            cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");//Quitar de la cadena cant_parte y separarlos por &
+            t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
+                if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
+                    let a = $("#form1").serializeObject();//convertir los elementos del form en un objeto json.
+                    let data = this.data();//data de la fila                
+                    a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
+                    a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
+                    a = JSON.stringify(a);//Convertir a cadena el json
+                    let options = {//opciones para la petición
+                        method: 'POST',
+                        body: a,
+                        headers: { "Content-Type": "application/json" }
+                    }
+                    let c = await fetch('/entradas', options);//petición
+                    let res = await c.json();
+                    t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
+                    t.$('label').text('0');//regresar las cantidades a sus valores iniciales
+                    if (res.status == 200) {
+                        $.notify(res.message, "success");//mensaje del backend
+                        let p = await fetch(`/parte/${data[0]}`);
+                        let r = await p.json();
+                        let part = r[0];
+                        part.cant = cantidades[rowIdx];
+                        partesRecibo.push(part);
+                    } else {
+                        $.notify(res.message);
+                    }
                 }
-                let c = await fetch('/entradas', options);//petición
-                let res = await c.json();
-                t.$('.cantidad').val("");//regresar las cantidades a sus valores iniciales
-                t.$('label').text('0');//regresar las cantidades a sus valores iniciales
-                if (res.status == 200) {
-                    $.notify(res.message, "success");//mensaje del backend
-                    let p = await fetch(`/parte/${data[0]}`);
-                    let r = await p.json();
-                    let part = r[0];
-                    part.cant = cantidades[rowIdx];
-                    partesRecibo.push(part);
-                } else {
-                    $.notify(res.message);
-                }
-            }
-            info.partes = JSON.parse(JSON.stringify(partesRecibo));
+                info.partes = JSON.parse(JSON.stringify(partesRecibo));
 
-        });
+            });
 
-        let pet = await fetch(`/cliente/${info.id_proveedor}`);
-        let proveedor = await pet.json();
-        info.cliente = JSON.parse(JSON.stringify(proveedor[0]));
-        info.semana = moment(info.fecha, 'DD/MM/YYYY').week();
-        $('#DetallesRecibo').modal('toggle');
+            let pet = await fetch(`/cliente/${info.id_proveedor}`);
+            let proveedor = await pet.json();
+            info.cliente = JSON.parse(JSON.stringify(proveedor[0]));
+            info.semana = moment(info.fecha, 'DD/MM/YYYY').week();
+            $('#DetallesRecibo').modal('toggle');
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Datos Válidos");
+        }
     });
 
 
@@ -1016,6 +1021,9 @@ async function initContactos() {
             $.notify(res.message);
         }
     });
+}
+async function initProyectos(){
+    
 }
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {

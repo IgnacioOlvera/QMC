@@ -2,7 +2,7 @@ var xl = require('excel4node');
 var express = require('express');
 var api = express.Router();
 var path = require('path');
-const os = require('os');
+var con = require('../conexion.js');
 var tiempo = new Date();
 //Envíos
 api.post('/BillOfLanding', function (req, res) {
@@ -1544,7 +1544,7 @@ api.post('/PackingList', function (req, res) {
             tot_peso += parseInt(parte.peso);
             pallets_tot += 1;
             inicio += 2;
-            
+
         }
     } else {
         for (index in info.partes) {
@@ -1586,7 +1586,7 @@ api.post('/PackingList', function (req, res) {
     }
 
     ws.cell(16, 15, 16, 17, true).string([{ size: 7.5 }, "CARRIER"]).style(bordeado);
-    
+
 
     ws.cell(17, 15, 17, 17, true).string([{ size: 7.5 }, "TOTAL PALLET"]).style(bordeado);
     ws.cell(17, 18, 17, 21, true).string([{ size: 7.5 }, `${pallets_tot}`]).style(bordeado);
@@ -1996,5 +1996,245 @@ api.post('/Receiving', function (req, res) {
     });
 });
 
+api.get('/ReleaseReceiving', async function (req, res) {
+    let info = null;
+    info = await new Promise(function (resolve, reject) {
+        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre,nota invoice, id_candado padlock, id_contendor conteiner from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
+            if (err) return reject(err);
+            else resolve(rows);
+        });
+    });
+    let wb = new xl.Workbook({
+        defaultFont: {
+            size: 10,
+            name: "Arial"
+        }
+    });
+    let ws;
+    //Fin de Pie de Documento
+
+    let inicio = 6;
+    let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+    let fecha = new Date(`${info[0].fecha.split('\/')[2]}`, `${info[0].fecha.split('\/')[1] - 1}`, `${info[0].fecha.split('\/')[0]}`);
+    fecha.toLocaleDateString('es-MX', options);
+    let meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Agu', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let bandera = true;
+    let mes = meses[fecha.getMonth()];
+    let cliente = info[0].nombre;
+    let data = info[0];
+    for (let i = 1; i <= info.length; i++) {
+        //Crear Nueva Hoja
+        if (bandera == true) {
+            mes = meses[fecha.getMonth()];
+            ws = wb.addWorksheet(`RCV ${mes} ${fecha.getFullYear()}`, {
+                pageSetup: {
+                    paperSize: 'LETTER_PAPER',
+                    usePrinterDefaults: true,
+                    fitToWidth: 1,
+                    orientation: 'landscape'
+                },
+                sheetView: {
+                    showGridLines: false
+                },
+                margins: {
+                    bottom: 0,
+                    top: 0
+                },
+                headerFooter: {
+                    scaleWithDoc: true
+                }
+            });
+            ws.column(9).setWidth(40);
+            ws.cell(2, 2, 2, 12, true).string('Report production releases for the GMD2JC/LC and T250 parts').style({
+                border: {
+                    top: {
+                        style: 'thin',
+                        color: '#000000'
+                    },
+                    right: {
+                        style: 'thin',
+                        color: '#000000'
+                    },
+                    bottom: {
+                        style: 'thin',
+                        color: '#000000'
+                    },
+                    left: {
+                        style: 'thin',
+                        color: '#000000'
+                    }
+                },
+                alignment: {
+                    wrapText: true,
+                    horizontal: 'center'
+                }
+            });
+            //Encabezados
+            ws.cell(4, 2, 4, 2, true).string('Week');
+            ws.cell(4, 3, 4, 3, true).string('Date');
+            ws.cell(4, 4, 4, 4, true).string('Time');
+            ws.cell(4, 5, 4, 5, true).string('Order #');
+            ws.cell(4, 6, 4, 6, true).string('Part#');
+            ws.cell(4, 7, 4, 7, true).string('QTY');
+            ws.cell(4, 8, 4, 8, true).string('RAN #');
+            ws.cell(4, 9, 4, 9, true).string('Customer/Plant');
+            ws.cell(4, 10, 4, 10, true).string('Invoice');
+            ws.cell(4, 11, 4, 11, true).string('Padlock');
+            ws.cell(4, 12, 4, 12, true).string('Conteiner');
+            inicio = 6
+            bandera = !bandera;
+        }
+        fecha = new Date(`${data.fecha.split('\/')[2]}`, `${data.fecha.split('\/')[1] - 1}`, `${data.fecha.split('\/')[0]}`);
+        cliente = data.nombre;
+        if (mes == meses[fecha.getMonth()]) {
+            ws.cell(inicio, 2, inicio, 2, true).number(data.semana);
+            ws.cell(inicio, 3, inicio, 3, true).string(`${data.fecha}`);
+            ws.cell(inicio, 4, inicio, 4, true).string(`${data.hora}`);
+            ws.cell(inicio, 5, inicio, 5, true).string(`${data.fechaJuliana}`);
+            ws.cell(inicio, 6, inicio, 6, true).string(data.no_parte);
+            ws.cell(inicio, 7, inicio, 7, true).number(data.cant_parte);
+            ws.cell(inicio, 8, inicio, 8, true).string(`${data.RAN}`);
+            ws.cell(inicio, 9, inicio, 9, true).string(`${data.nombre}`);
+            ws.cell(inicio, 10, inicio, 10, true).string(`${data.invoice}`);
+            ws.cell(inicio, 11, inicio, 11, true).string(`${data.padlock}`);
+            ws.cell(inicio, 12, inicio, 12, true).string(`${data.conteiner}`);
+            if (cliente != data.nombre) inicio += 2
+            else {
+                cliente = data.nombre;
+                inicio++;
+            }
+            data = info[i];
+        } else {
+            bandera = !bandera;
+        }
+
+
+    }
+
+    wb.write(path.join(__dirname, `../docs/Production releases for the GMD2JC.LC and T250 parts ${fecha.getFullYear} RCV.xlsx`), function (err) {
+        if (err) throw err
+        else {
+            res.send({ message: 'Archivo creado', status: '200' });
+        }
+    });
+});
+
+api.get('/ReleaseReceiving', async function (req, res) {
+    let info = null;
+    info = await new Promise(function (resolve, reject) {
+        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
+            if (err) return reject(err);
+            else resolve(rows);
+        });
+    });
+    let wb = new xl.Workbook({
+        defaultFont: {
+            size: 10,
+            name: "Arial"
+        }
+    });
+    let ws;
+    //Fin de Pie de Documento
+
+    let inicio = 6;
+    let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+    let fecha = new Date(`${info[0].fecha.split('\/')[2]}`, `${info[0].fecha.split('\/')[1] - 1}`, `${info[0].fecha.split('\/')[0]}`);
+    fecha.toLocaleDateString('es-MX', options);
+    let meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Agu', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let bandera = true;
+    let mes = meses[fecha.getMonth()];
+    let cliente = info[0].nombre;
+    let data = info[0];
+    for (let i = 1; i <= info.length; i++) {
+        //Crear Nueva Hoja
+        if (bandera == true) {
+            mes = meses[fecha.getMonth()];
+            ws = wb.addWorksheet(`RCV ${mes} ${fecha.getFullYear()}`, {
+                pageSetup: {
+                    paperSize: 'LETTER_PAPER',
+                    usePrinterDefaults: true,
+                    fitToWidth: 1,
+                    orientation: 'landscape'
+                },
+                sheetView: {
+                    showGridLines: false
+                },
+                margins: {
+                    bottom: 0,
+                    top: 0
+                },
+                headerFooter: {
+                    scaleWithDoc: true
+                }
+            });
+            ws.column(9).setWidth(40);
+            ws.cell(2, 2, 2, 9, true).string('Report production releases for the GMD2JC/LC and T250 parts').style({
+                border: {
+                    top: {
+                        style: 'thin',
+                        color: '#000000'
+                    },
+                    right: {
+                        style: 'thin',
+                        color: '#000000'
+                    },
+                    bottom: {
+                        style: 'thin',
+                        color: '#000000'
+                    },
+                    left: {
+                        style: 'thin',
+                        color: '#000000'
+                    }
+                },
+                alignment: {
+                    wrapText: true,
+                    horizontal: 'center'
+                }
+            });
+            //Encabezados
+            ws.cell(4, 2, 4, 2, true).string('Week');
+            ws.cell(4, 3, 4, 3, true).string('Date');
+            ws.cell(4, 4, 4, 4, true).string('Time');
+            ws.cell(4, 5, 4, 5, true).string('Order #');
+            ws.cell(4, 6, 4, 6, true).string('Part#');
+            ws.cell(4, 7, 4, 7, true).string('QTY');
+            ws.cell(4, 8, 4, 8, true).string('RAN #');
+            ws.cell(4, 9, 4, 9, true).string('Customer/Plant');
+            inicio = 6
+            bandera = !bandera;
+        }
+        fecha = new Date(`${data.fecha.split('\/')[2]}`, `${data.fecha.split('\/')[1] - 1}`, `${data.fecha.split('\/')[0]}`);
+        cliente = data.nombre;
+        if (mes == meses[fecha.getMonth()]) {
+            ws.cell(inicio, 2, inicio, 2, true).number(data.semana);
+            ws.cell(inicio, 3, inicio, 3, true).string(`${data.fecha}`);
+            ws.cell(inicio, 4, inicio, 4, true).string(`${data.hora}`);
+            ws.cell(inicio, 5, inicio, 5, true).string(`${data.fechaJuliana}`);
+            ws.cell(inicio, 6, inicio, 6, true).string(data.no_parte);
+            ws.cell(inicio, 7, inicio, 7, true).number(data.cant_parte);
+            ws.cell(inicio, 8, inicio, 8, true).string(`${data.RAN}`);
+            ws.cell(inicio, 9, inicio, 9, true).string(`${data.nombre}`);
+            if (cliente != data.nombre) inicio += 2
+            else {
+                cliente = data.nombre;
+                inicio++;
+            }
+            data = info[i];
+        } else {
+            bandera = !bandera;
+        }
+    }
+
+    wb.write(path.join(__dirname, `../docs/Production releases for the GMD2JC.LC and T250 parts ${fecha.getFullYear} RCV.xlsx`), function (err) {
+        if (err) throw err
+        else {
+            res.send({ message: 'Archivo creado', status: '200' });
+        }
+    });
+});
 
 module.exports = api;
