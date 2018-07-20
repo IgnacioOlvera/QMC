@@ -12,6 +12,7 @@ var rutas_contactos = require('./rutas/contactos.js');
 var rutas_movimientos = require('./rutas/movimientos.js');
 var rutas_vistas = require('./rutas/views.js');
 var rutas_archivos = require('./rutas/archivos.js');
+var rutas_proyectos = require('./rutas/proyectos.js');
 
 var app = express();
 app.use(function (req, res, next) {
@@ -50,5 +51,6 @@ app.use(rutas_contactos);
 app.use(rutas_movimientos);
 app.use(rutas_vistas);
 app.use(rutas_archivos);
+app.use(rutas_proyectos);
 
 module.exports = app;

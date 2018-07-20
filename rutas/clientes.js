@@ -104,7 +104,7 @@ api.get('/proveedor/:id?', function (req, res) {
             else res.send(rows);
         });
     } else {//Partes que surte el cliente.
-        sql = `select a.no_parte interior,a.no_parte_ext exterior,a.descripcion descripcion,a.cant_x_caja caja,a.cant_x_pallet pallet,a.existencia,a.cant_min,b.nombre proveedor,b.id_cliente id_proveedor,a.estado estado from partes a inner join (select id_cliente,nombre from clientes) b on a.id_proveedor=b.id_cliente;`;
+        sql = `select a.no_parte      interior, a.no_parte_ext  exterior, a.descripcion   descripcion, a.cant_x_caja   caja, a.cant_x_pallet pallet, a.existencia, a.cant_min, b.nombre        proveedor, b.id_cliente    id_proveedor, a.estado estado ,a.id_proyecto id_proyecto, p.nombre proyecto,a.peso peso   from partes a inner join (select id_cliente, nombre from clientes) b on a.id_proveedor = b.id_cliente inner join proyectos p on a.id_proyecto = p.id_proyecto`;
         con.query(sql, function (err, rows) {
             if (err) throw err
             else res.send(rows);

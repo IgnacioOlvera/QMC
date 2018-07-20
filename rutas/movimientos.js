@@ -145,8 +145,8 @@ api.post('/salidas', function (req, res) {
     let
         proveedor = salida.id_proveedor || null,
         destino = salida.id_destino || null,
-        parte = `'${salida.id_parte}'` || null
-    cantidad = salida.cant_parte || null,
+        parte = `'${salida.id_parte}'` || null,
+        cantidad = salida.cant_parte || null,
         fecha = salida.fecha || null,
         secuencia = salida.secuencia || null,
         peso = salida.peso || null,
@@ -156,7 +156,7 @@ api.post('/salidas', function (req, res) {
     consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},${destino},(select no_parte from partes where id_proveedor=4),${cantidad},(select count(*) from costales),(select count(*)-${cantidad} from costales),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,null,null,'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia-${cantidad} where no_parte=(select no_parte from (select no_parte from partes where id_proveedor=4) b)`, `delete from costales where secuencia='${secuencia}'`];
 
     if (salida != null) {
-        if (proveedor != null && destino != null && parte != null && cantidad != null && nota != null && fecha != null && cantidad > 0) {
+        if (proveedor != null && destino != null && parte != null && cantidad != null && fecha != null && cantidad > 0) {
             if (secuencia != null) {
                 for (consulta in consultas) {
                     con.query(consultas[consulta], function (err) {

@@ -683,18 +683,24 @@ async function initPartes() {
             $(`#modal-${$(this).data("target")}`).modal('toggle');
         }
     });
-
+    let j = await fetch('/proyectos');
+    let proyectos = await j.json();
     let bandera = true;
+    let sproyectos = "";
+    proyectos.forEach(proyecto => {
+        sproyectos += `<option value=${proyecto.id_proyecto}>${proyecto.nombre}</option>`
+    });
+    $('#in_proyecto').html(sproyectos);
     $('#in_cliente').on('change', async function () {
         if (bandera == true) {
             let pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             partes.forEach(parte => {
                 (parte.exterior == null) ? parte.exterior = "" : parte.exterior;
-                modales += `<div style="display:none" id="modal-${parte.interior}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${parte.descripcion} - ${parte.interior}</h4> </div> <div class="modal-body"> <form id="Parte-${parte.interior}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.interior}" name="no_parte" id="in_no_parte-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte Exterior </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.exterior}" name="no_parte_ext" id="in_no_parte_ext-${parte.exterior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte Exterior En Caso de Existir" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="descripcion" value="${parte.descripcion}" id="in_decripcion-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Descripción" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Caja <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.caja}" name="cant_x_caja" id="in_cantxcaja-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Caja" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Pallet <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.pallet}" min="0" name="cant_x_pallet" id="in_cantxpallet-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Pallet" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Mínima <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.cant_min}" min="0" name="cant_min" id="in_cant_min-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Existencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.existencia}" name="existencia" id="in_existencia-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso por Unidad <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" id="in_peso-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Peso por Unidad" /></div></div><div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Estado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="estado" id="parte_estado-${parte.interior}"> <option disabled selected>${(parte.estado == 1) ? 'Inactivo' : 'Activo'}</option> <option value="0">Activo</option> <option value="1">Inactivo</option> </select> </div> </div></div> </form></div> <div class="modal-footer"> <button type="button" data-target="${parte.interior}" data-parte="${parte.interior}" class="btn btn-primary actualizarParte">Guardar Cambios</button></div> </div> </div> </div>`;
+                modales += `<div style="display:none" id="modal-${parte.interior}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${parte.descripcion} - ${parte.interior}</h4> </div> <div class="modal-body"> <form id="Parte-${parte.interior}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.interior}" name="no_parte" id="in_no_parte-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte Exterior </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.exterior}" name="no_parte_ext" id="in_no_parte_ext-${parte.exterior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte Exterior En Caso de Existir" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="descripcion" value="${parte.descripcion}" id="in_decripcion-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Descripción" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Caja <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.caja}" name="cant_x_caja" id="in_cantxcaja-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Caja" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Pallet <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.pallet}" min="0" name="cant_x_pallet" id="in_cantxpallet-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Pallet" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Mínima <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.cant_min}" min="0" name="cant_min" id="in_cant_min-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Existencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.existencia}" name="existencia" id="in_existencia-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso por Unidad <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" value="${parte.peso}" id="in_peso-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Peso por Unidad" /></div></div><div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Estado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="estado" id="parte_estado-${parte.interior}"> <option value="${parte.estado}" selected>${(parte.estado == 1) ? 'Inactivo' : 'Activo'}</option> <option value="0">Activo</option> <option value="1">Inactivo</option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Proyecto <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select name="id_proyecto" id="in_proyecto-${parte.interior}" class="form-control col-md-7 col-xs-12"><option value="${parte.id_proyecto}" selected>${parte.proyecto}</option> ${sproyectos}</select> </div> </div></div> </form></div> <div class="modal-footer"> <button type="button" data-target="${parte.interior}" data-parte="${parte.interior}" class="btn btn-primary actualizarParte">Guardar Cambios</button></div> </div> </div> </div>`;
                 let cajas = Math.floor(parte.existencia / parte.caja);
                 let tarimas = Math.floor(cajas / parte.pallet);
-                t.row.add([`{"proveedor":${parte.id_proveedor},"estado":${parte.estado}}`, parte.interior, parte.exterior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
+                t.row.add([`{"proveedor":${parte.id_proveedor},"estado":${parte.estado}}`, parte.interior, parte.exterior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, parte.proyecto, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
             });
             t.draw();
             bandera = !bandera;
@@ -1022,8 +1028,100 @@ async function initContactos() {
         }
     });
 }
-async function initProyectos(){
-    
+async function initProyectos() {
+    let tabla = $('#proyectos').DataTable({
+        "ordenering": false,
+        "createdRow": function (row, data) {
+            let info = JSON.parse(data[0]);
+            $(row).attr("data-owner", info.propietario);
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ]
+    });
+
+    let pet = await fetch('/clienteNat/0');
+    let clientes = await pet.json();
+    $('.in_propietario').append('<option selected value="0"> Sección de cliente...</option>');
+    clientes.forEach(cliente => {
+        (cliente.estado == 'ACTIVO') ? $('.in_propietario').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
+    });
+
+    $('#registroProyecto').on('click', async function () {
+        let form = $('#RegistrarProyectoForm').serializeObject();
+        if (form.proyecto != null && form.propietario != 0 && form != null) {
+            let options = {
+                method: 'post',
+                body: JSON.stringify(form),
+                headers: { "Content-Type": "application/json" }
+            }
+
+            let url = "/proyectos/1"
+            let pet = await fetch(url, options);
+            let res = await pet.json();
+
+            if (res.status == 200) {
+                $.notify("Parte Registrada Correctamente", "success");
+                $('#AgregarProyectoModal').modal('toggle');
+            } else if (res.status == 500) {
+                $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
+            }
+
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
+        }
+    });
+
+
+    pet = await fetch('/proyectos');
+    let proyectos = await pet.json();
+    let modalesProyectos = "";
+    for (i in proyectos) {
+        let proyecto = proyectos[i];
+        let scliente = `<select class="form-control" name="propietario" id="${proyecto.id_proyecto}-propietario">`;
+        scliente += `<option value="${proyecto.id_cliente}" selected> ${proyecto.propietario}</option>`;
+        clientes.forEach(client => {
+            scliente += `<option value='${client.id_cliente}'>${client.nombre}</option>`;
+        });
+        scliente += "</select>";
+        modalesProyectos += `<div style="display:none" id="modal-proyecto-${proyecto.id_proyecto}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Registro de Proyectos</h4> </div> <div class="modal-body"> <form id="editar-proyecto-${proyecto.id_proyecto}" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Proyecto <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="proyecto" id="in_proyecto-${proyecto.id_proyecto}" value='${proyecto.nombre}' class="form-control col-md-7 col-xs-12" placeholder="Ingresar Nombre Proyecto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Propietario </label> <div class="col-md-6 col-sm-6 col-xs-12"> ${scliente} </div> </div> </div> </form> </div> <div class="modal-footer"> <button id="registroProyecto" data-modal="#modal-proyecto-${proyecto.id_proyecto}" data-pointer='${proyecto.id_proyecto}' data-target='#editar-proyecto-${proyecto.id_proyecto}' type="button" class="btn btn-primary editar">Editar </button> </div> </div> </div> </div>`;
+
+        tabla.row.add([`{"propietario":"${proyecto.id_cliente}"}`, proyecto.nombre, proyecto.propietario, `<button type="button" class="btn btn-primary editarc" data-toggle="modal" data-proyecto=${proyecto.id_proyecto} data-target="#modal-proyecto-${proyecto.id_proyecto}">Editar <span class="fa fa-edit"></span></button>`]).draw();
+    }
+
+    $('#modals').html(modalesProyectos);
+
+    $('.editar').on('click', async function () {
+        let data = $($(this).data('target')).serializeObject();
+        if (data.propietario != null && data.proyecto != null) {
+            let url = '/proyectos/0';
+            data.id_proyecto = $(this).data('pointer');
+            let options = {
+                method: 'post',
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "application/json" }
+            }
+            let pet = await fetch(url, options);
+            let res = await pet.json();
+            if (res.status == 200) {
+                $.notify(res.message, 'success');
+                $($(this).data('modal')).modal('toggle');
+            } else if (res.status == 500) {
+                $.notify(res.message);
+            }
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Válidos");
+        }
+    });
+
+    $('.in_propietario').on('change', function () {
+        let rows = $('#proyectos').find(`[data-owner=${$(this).val()}]`);
+        $('#proyectos tbody tr').hide();
+        console.log(rows);
+        rows.show();
+    });
 }
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {
