@@ -921,6 +921,13 @@ async function initContactos() {
                 "data-contacto": info.id_contacto,
                 "data-cliente": info.id_cliente
             });
+            if (info.estado == 0) {
+                $(row).css({
+                    'background-color': '#d51f2e9c',
+                    'color': 'black',
+                    'font-weight': 'bold'
+                });
+            }
         }, "columnDefs": [
             {
                 "targets": [0],
@@ -940,9 +947,9 @@ async function initContactos() {
             cliente += `<option value='${client.id_cliente}'>${client.nombre}</option>`;
         });
         cliente += "</select>";
-        modales += `<div style="display:none" id="modal-${contacto.id_contacto}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${contacto.nombre} de ${contacto.cliente}</h4> </div> <div class="modal-body"> <form id="${contacto.id_contacto}-Info" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nombre <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.nombre}" name="nombre" id="${contacto.id_contacto}-nombre" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Contacto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Teléfono </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value='${contacto.telefono}' name="telefono" id="${contacto.id_contacto}-telefono" class="form-control col-md-7 col-xs-12" placeholder="Teléfono de Contacto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Extensión <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.ext || ''}" name="ext" id="${contacto.id_contacto}-ext" class="form-control col-md-7 col-xs-12" placeholder="Ext." /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Correo <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.correo}" name="correo" id="${contacto.id_contacto}-correo" class="form-control col-md-7 col-xs-12" placeholder="Correo" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cliente <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> ${cliente} </div> </div> </div> </form>  <div class="modal-footer"> <button type="button" data-target="#${contacto.id_contacto}-Info" data-modal="#modal-${contacto.id_contacto}" data-contacto="${contacto.id_contacto}" class="btn btn-primary actualizarContacto">Guardar Cambios</button> </div> </div> </div> </div> </div>`;
+        modales += `<div style="display:none" id="modal-${contacto.id_contacto}" class="modal fade modal-costales in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${contacto.nombre} de ${contacto.cliente}</h4> </div> <div class="modal-body"> <form id="${contacto.id_contacto}-Info" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Nombre <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.nombre}" name="nombre" id="${contacto.id_contacto}-nombre" class="form-control col-md-7 col-xs-12" placeholder="Nombre del Contacto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Teléfono </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value='${contacto.telefono}' name="telefono" id="${contacto.id_contacto}-telefono" class="form-control col-md-7 col-xs-12" placeholder="Teléfono de Contacto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Extensión <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.ext || ''}" name="ext" id="${contacto.id_contacto}-ext" class="form-control col-md-7 col-xs-12" placeholder="Ext." /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Correo <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${contacto.correo}" name="correo" id="${contacto.id_contacto}-correo" class="form-control col-md-7 col-xs-12" placeholder="Correo" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cliente <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> ${cliente} </div> </div><div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Estado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="estado" id="contacto_estado-${contacto.id_contacto}"> <option value="${contacto.estado}" selected>${(contacto.estado == 0) ? 'Inactivo' : 'Activo'}</option> <option value="1">Activo</option> <option value="0">Inactivo</option> </select> </div> </div> </div> </form>  <div class="modal-footer"> <button type="button" data-target="#${contacto.id_contacto}-Info" data-modal="#modal-${contacto.id_contacto}" data-contacto="${contacto.id_contacto}" class="btn btn-primary actualizarContacto">Guardar Cambios</button> </div> </div> </div> </div> </div>`;
 
-        info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}"}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+        info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}","estado":${contacto.estado}}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
     });
 
     $('#ModalesContactos').html(modales);
@@ -967,7 +974,7 @@ async function initContactos() {
                 pet = await fetch(url);
                 let contactos = await pet.json();
                 contactos.forEach(contacto => {
-                    info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}"}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+                    info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}","estado":${contacto.estado}}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
                 });
 
             } else if (res.status == "500") {
@@ -1000,7 +1007,7 @@ async function initContactos() {
                 pet = await fetch(url);
                 let contactos = await pet.json();
                 contactos.forEach(contacto => {
-                    info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}"}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+                    info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}","estado":${contacto.estado}}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
                 });
 
             } else if (res.status == "500") {
@@ -1014,7 +1021,7 @@ async function initContactos() {
     $('.eliminar').on('click', async function () {
         let url = `/contacto/${$(this).data("target")}`;
         let options = {
-            method: 'delete',
+            method: 'put',
             headers: { "Content-Type": "application/json" }
         }
         let pet = await fetch(url, options);
@@ -1022,7 +1029,13 @@ async function initContactos() {
 
         if (res.status == "200") {
             $.notify(res.message, "success");
-            info.row($(this).parents('tr')).remove().draw();
+            console.log($('#ContactosInfo').find(`[data-contacto="${$(this).data('target')}"]`));
+            $('#ContactosInfo').find(`[data-contacto=${$(this).data('target')}]`).css({
+                'background-color': '#d51f2e9c',
+                'color': 'black',
+                'font-weight': 'bold'
+            });
+            //info.row($(this).parents('tr')).remove().draw();
         } else if (res.status == "500") {
             $.notify(res.message);
         }

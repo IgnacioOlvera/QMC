@@ -32,11 +32,12 @@ api.post('/contacto/:b', function (req, res) {
             telefono = (contacto.telefono == "") ? null : `'${contacto.telefono}'`,
             extension = (contacto.ext == "") ? null : `'${contacto.ext}'`,
             correo = (contacto.correo == "") ? null : `'${contacto.correo}'`,
-            id_cliente = contacto.cliente || null;
+            id_cliente = contacto.cliente || null,
+            estado = contacto.estado;
         if (nombre != null && telefono != null && correo != null && id_cliente != null) {
             //Actualizar Contacto
             if (b == 0) {
-                sql = `update contactos set nombre='${nombre}', telefono=${telefono},ext=${extension},correo=${correo},id_cliente=${id_cliente} where id_contacto=${id_contacto}`;
+                sql = `update contactos set nombre='${nombre}', telefono=${telefono},ext=${extension},correo=${correo},id_cliente=${id_cliente}, estado=${estado} where id_contacto=${id_contacto}`;
                 con.query(sql, function (err) {
                     if (err) res.send({ message: 'Ocurrió un error', status: "500" });
                     else
@@ -45,7 +46,7 @@ api.post('/contacto/:b', function (req, res) {
             }
             //Insertar Contacto
             else if (b == 1) {
-                sql = `insert into contactos values(null,'${nombre}',${telefono},${extension},${correo},${id_cliente});`;
+                sql = `insert into contactos values(null,'${nombre}',${telefono},${extension},${correo},${id_cliente},${estado});`;
                 con.query(sql, function (err) {
                     if (err) tres.send({ message: 'Ocurrió un error', status: "500" });
                     else
@@ -59,11 +60,11 @@ api.post('/contacto/:b', function (req, res) {
         res.send({ message: 'Ocurrió un error', status: "500" });
     }
 });
-//Eliminar Servicio
-api.delete('/contacto/:id', function (req, res) {
+//Eliminar Contacto
+api.put('/contacto/:id', function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
-        con.query(`delete from contactos where id_contacto=${id}`, function (err) {
+        con.query(`update contactos set estado = 0 where id_contacto=${id}`, function (err) {
             if (err) res.status(500).send({ message: 'Ocurrió un error', status: "500" })
             else
                 res.status(200).send({ message: 'Contacto Eliminado correctamente', status: "200" })
