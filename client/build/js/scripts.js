@@ -1136,6 +1136,34 @@ async function initProyectos() {
         rows.show();
     });
 }
+function initLogin() {
+    $('#login').on('click', async function () {
+        let data = {
+            correo: $("#usuario").val(),
+            pass: $("#pass").val()
+
+        }
+        if (data.correo != "" && data.pass != "") {
+            let options = {
+                method: 'post',
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "application/json" }
+            }
+            let pet = await fetch('/log', options);
+            let res = await pet.json();
+            if (res.status == 200) {
+                document.cookie = `authorization=${res.token}`;
+                window.location.replace("/inicio");
+            } else {
+                $.notify('Falta Ingresar Usuario y/o Contraseña');
+            }
+
+        } else {
+            $.notify('Falta Ingresar Usuario y/o Contraseña');
+        }
+    });
+
+}
 (function ($) {//Función para transformar las formas en json
     $.fn.serializeObject = function () {
 

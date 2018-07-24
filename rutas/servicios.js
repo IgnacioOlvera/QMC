@@ -1,7 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
-
+var md_auth = require('../middlewares/autenticacion.js');
 api.get('/servicio/:id?', function (req, res) {
     //Obtener a quién se le brinda un servicio en específico
     if (req.params.id) {

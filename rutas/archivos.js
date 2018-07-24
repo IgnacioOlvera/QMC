@@ -4,6 +4,7 @@ var api = express.Router();
 var path = require('path');
 var con = require('../conexion.js');
 var tiempo = new Date();
+var md_auth = require('../middlewares/autenticacion.js');
 //Envíos
 api.post('/BillOfLanding', function (req, res) {
     info = req.body;

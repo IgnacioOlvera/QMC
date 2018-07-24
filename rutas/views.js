@@ -1,33 +1,36 @@
 var express = require('express');
 var api = express.Router();
 var path = require("path");
+var md_auth = require('../middlewares/autenticacion.js');
 
-api.get('/inicio', function (req, res) {
-    res.sendFile(path.join(__dirname,'../client/production/index.html'));
+api.get('/inicio', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/index.html'));
 });
-api.get('/recibo',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/recibo.html'));
+api.get('/recibo', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/recibo.html'));
 });
-api.get('/envios',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/envios.html'));
+api.get('/envios', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/envios.html'));
 });
-api.get('/reportes',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/reportes.html'));
+api.get('/reportes', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/reportes.html'));
 });
-api.get('/clientesPag',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/clientes.html'));
+api.get('/clientesPag', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/clientes.html'));
 });
-api.get('/contactosPag',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/contactos.html'));
+api.get('/contactosPag', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/contactos.html'));
 });
-api.get('/movimientosPag',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/movimientos.html'));
+api.get('/movimientosPag', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/movimientos.html'));
 });
-api.get('/partesPag',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/partes.html'));
+api.get('/partesPag', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/partes.html'));
 });
-api.get('/reportes',function(req,res){
-    res.sendFile(path.join(__dirname,'../client/production/reportes.html'));
+api.get('/reportes', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/reportes.html'));
 });
-
+api.get('/login', function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/login.html'));
+});
 module.exports = api;

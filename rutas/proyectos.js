@@ -1,7 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
-
+var md_auth = require('../middlewares/autenticacion.js');
 api.get('/proyectos', function (req, res) {
     con.query('select p.*, c.nombre propietario from proyectos p inner join clientes c on p.id_cliente=c.id_cliente', function (err, rows) {
         if (err) throw err

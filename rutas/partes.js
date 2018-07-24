@@ -1,7 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
-
+var md_auth = require('../middlewares/autenticacion.js');
 api.get('/parte/:id?', function (req, res) {
     if (req.params.id) {//Si existe ID en el URL selecciona parte específica y su proveedor
         var no_parte = req.params.id;

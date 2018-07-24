@@ -1,6 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
+var md_auth = require('../middlewares/autenticacion.js');
 api.get('/almacen/:id?', function (req, res) {
     let sql = "";
     if (req.params.id) {

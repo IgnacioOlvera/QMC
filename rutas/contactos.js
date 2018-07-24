@@ -1,6 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
+var md_auth = require('../middlewares/autenticacion.js');
 
 api.get('/contacto/:id?', function (req, res) {
     if (req.params.id) {//Si existe id, seleccion todos los contactos de un cliente.

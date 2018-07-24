@@ -2,7 +2,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var path = require("path");
-
+var cookieParser = require('cookie-parser');
 //Importación de Rutas
 var rutas_partes = require('./rutas/partes.js');
 var rutas_almaces = require('./rutas/almacenes.js');
@@ -13,8 +13,10 @@ var rutas_movimientos = require('./rutas/movimientos.js');
 var rutas_vistas = require('./rutas/views.js');
 var rutas_archivos = require('./rutas/archivos.js');
 var rutas_proyectos = require('./rutas/proyectos.js');
+var rutas_usuarios = require('./rutas/usuarios.js');
 
 var app = express();
+app.use(cookieParser());
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,5 +54,6 @@ app.use(rutas_movimientos);
 app.use(rutas_vistas);
 app.use(rutas_archivos);
 app.use(rutas_proyectos);
+app.use(rutas_usuarios);
 
 module.exports = app;

@@ -1,6 +1,7 @@
 var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
+var md_auth = require('../middlewares/autenticacion.js');
 
 //Regresa historial de movimientos
 api.get('/movimientos', function (req, res) {
