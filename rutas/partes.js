@@ -44,7 +44,7 @@ api.post('/parte/:b', function (req, res) {
                         res.status(200).send({ message: 'Parte editada correctamente', status: "200" })
                 });
             else if (b == 1)//Inserción de parte
-                con.query(`insert into partes values(null,'${no_parte}','${descripcion}',${no_parte_ext},${cant_x_caja},${cant_x_pallet},${cant_min},${existencia},${id_proveedor},${peso},0,${proyecto})`, function (err) {
+                con.query(`insert into partes values(null,'${no_parte}','${descripcion}',${no_parte_ext},${cant_x_caja},${cant_x_pallet},${cant_min},${existencia},${id_proveedor},${peso},0,${proyecto},0,0)`, function (err) {
                     if (err) console.log(err)
                     else
                         res.status(200).send({ message: 'Parte insertada correctamente', status: "200" })
@@ -82,6 +82,44 @@ api.get('/existencia/:id?', function (req, res) {
         con.query(sql, function (err, rows) {
             if (err) throw err
             else res.send(rows);
+        });
+    }
+});
+
+api.post('/qc', function (req, res) {
+    let data = req.body;
+    let cont = 0;
+    for (i in data.partes) {
+        let parte = data.partes[i];
+        con.query(`update partes set qc=${parte.qc} where no_parte='${parte.no_parte}'`, function (err) {
+            if (err) res.send({ message: 'Ocurrió un error SQL', status: 500 });
+            else {
+                cont++;
+                if (cont == data.partes.length) {
+                    res.send({ message: 'Quality Control Registrado Correctamente', status: 200 });
+                }
+
+            }
+
+        });
+    }
+});
+
+api.post('/svc', function (req, res) {
+    let data = req.body;
+    let cont = 0;
+    for (i in data.partes) {
+        let parte = data.partes[i];
+        con.query(`update partes set svc=${parte.qc} where no_parte='${parte.no_parte}'`, function (err) {
+            if (err) res.send({ message: 'Ocurrió un error SQL', status: 500 });
+            else {
+                cont++;
+                if (cont == data.partes.length) {
+                    res.send({ message: 'Service Registrado Correctamente', status: 200 });
+                }
+
+            }
+
         });
     }
 });

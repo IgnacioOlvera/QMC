@@ -33,4 +33,11 @@ api.get('/reportes', md_auth.ensureAuth, function (req, res) {
 api.get('/login', function (req, res) {
     res.sendFile(path.join(__dirname, '../client/production/login.html'));
 });
+api.get('/qc', function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/qc.html'));
+});
+api.get('/svc', function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/svc.html'));
+});
+
 module.exports = api;

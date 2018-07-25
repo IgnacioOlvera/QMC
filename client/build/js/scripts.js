@@ -160,10 +160,10 @@ async function initRecibo() {
 
     let count = 1;//Contador para los costales
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
-        "ordering": false
+        "ordering": false, "searching": false
     });
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
-        "ordering": false
+        "ordering": false, "searching": false
     });
     let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
@@ -374,10 +374,10 @@ async function initEnvios() {
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
     let count = 1;
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
-        "ordering": false
+        "ordering": false, "searching": false
     });
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
-        "ordering": false
+        "ordering": false, "searching": false
     });
 
     let pet = await fetch('/clienteNat/0');
@@ -627,7 +627,7 @@ async function initPartes() {
                 "targets": [0],
                 "visible": false
             }
-        ], "bPaginate": false
+        ], "bPaginate": false, "searching": false
     });
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
         "ordering": false,
@@ -791,7 +791,9 @@ async function initPartes() {
     });
 }
 async function initClientes() {
-    let TablaClientes = $('#ClientesInfo').DataTable();
+    let TablaClientes = $('#ClientesInfo').DataTable({
+        "searching": false
+    });
     let url = "/cliente";
     let pet = await fetch(url);
     let clientes = await pet.json();
@@ -876,7 +878,8 @@ var mov = $('#MovimientosInfo').DataTable({
             "targets": [0],
             "visible": false
         }
-    ]
+    ],
+    "searching": false
 });
 async function initMovimientos() {
 
@@ -933,7 +936,7 @@ async function initContactos() {
                 "targets": [0],
                 "visible": false
             }
-        ]
+        ], "searching": false
     });
     let url = "/contacto";
     let pet = await fetch(url);
@@ -1052,7 +1055,7 @@ async function initProyectos() {
                 "targets": [0],
                 "visible": false
             }
-        ]
+        ], "ordering": false, "searching": false
     });
 
     let pet = await fetch('/clienteNat/0');
@@ -1136,12 +1139,148 @@ async function initProyectos() {
         rows.show();
     });
 }
+async function initQC() {
+    let t = $('#piezasQC').DataTable({//Inicializar tabla de clientes.
+        "ordering": false,
+        "createdRow": function (row, data) {
+            info = JSON.parse(data[0]);
+            $(row).attr("data-prove", info.proveedor);
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ],
+        "searching": false
+    });
+    let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
+    let clientes = await pet.json();
+    $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
+    clientes.forEach(cliente => {//Llenado de select con todos lo clientes
+        (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
+    });
+    pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
+    let partes = await pet.json();
+    t.rows().remove().draw();//Quitar todos los elementos de la tabla.
+    partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
+        (parte.estado == 0) ? t.row.add([`{"proveedor":${parte.id_proveedor}}`, parte.interior, parte.exterior, parte.descripcion, `<input type="number" min="0" data-validation="number" data-parte=${parte.interior} data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant-${parte.interior}" name="cant_parte" class="form-control cantidad"/>`]).draw() : null;
+    });
+    $('[data-prove]').hide();
+    $('#in_cliente').on('change', async function () {//Evento del select de cliente
+        $('#piezasQC tbody tr').hide();
+        $(`[data-prove=${$(this).val()}]`).show();
+    });
+    $('#terminarQC').on('click', async function () {//Enviar todas las filas para realzar movimientos en la base de datos.
+        let qc = [];
+        info = $("#formQC").serializeObject();
+        if (info.id_proveedor != 0) {
+            let cantidades = t.$('.cantidad').serialize();//Obtener una cadena con todos los valores de los inputs de cantidades.
+            cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");//Quitar de la cadena cant_parte y separarlos por &
+            await t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
+                if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
+                    let d = this.data();
+                    qc.push({
+                        no_parte: d[1],
+                        qc: cantidades[rowIdx]
+                    });
+                }
+            }); info
+            info.partes = JSON.parse(JSON.stringify(await qc));
+
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Datos Válidos");
+        }
+        let options = {//opciones para la petición
+            method: 'POST',
+            body: JSON.stringify(await info),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch('/qc', options);
+        let res = await pet.json();
+
+        if (res.status == 200) {
+            $.notify("Quality Control Registrado Correctamente", "success");
+            $('#piezasQC').find("input").val("");
+        } else if (res.status == 500) {
+            $.notify("Ocurrió un error SQL");
+        }
+
+
+
+    });
+}
+async function initSVC() {
+    let t = $('#piezasQC').DataTable({//Inicializar tabla de clientes.
+        "ordering": false,
+        "createdRow": function (row, data) {
+            info = JSON.parse(data[0]);
+            $(row).attr("data-prove", info.proveedor);
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ],
+        "searching": false
+    });
+    let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
+    let clientes = await pet.json();
+    $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
+    clientes.forEach(cliente => {//Llenado de select con todos lo clientes
+        (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
+    });
+    pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
+    let partes = await pet.json();
+    t.rows().remove().draw();//Quitar todos los elementos de la tabla.
+    partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
+        (parte.estado == 0) ? t.row.add([`{"proveedor":${parte.id_proveedor}}`, parte.interior, parte.exterior, parte.descripcion, `<input type="number" min="0" data-validation="number" data-parte=${parte.interior} data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant-${parte.interior}" name="cant_parte" class="form-control cantidad"/>`]).draw() : null;
+    });
+    $('[data-prove]').hide();
+    $('#in_cliente').on('change', async function () {//Evento del select de cliente
+        $('#piezasQC tbody tr').hide();
+        $(`[data-prove=${$(this).val()}]`).show();
+    });
+    $('#terminarQC').on('click', async function () {//Enviar todas las filas para realzar movimientos en la base de datos.
+        let qc = [];
+        info = $("#formQC").serializeObject();
+        if (info.id_proveedor != 0) {
+            let cantidades = t.$('.cantidad').serialize();//Obtener una cadena con todos los valores de los inputs de cantidades.
+            cantidades = cantidades.replace(/cant_parte=/gi, "").split("&");//Quitar de la cadena cant_parte y separarlos por &
+            await t.rows().every(async function (rowIdx, tableLoop, rowLoop) { //loop para recorrer toda la tabla
+                if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
+                    let d = this.data();
+                    qc.push({
+                        no_parte: d[1],
+                        qc: cantidades[rowIdx]
+                    });
+                }
+            }); info
+            info.partes = JSON.parse(JSON.stringify(await qc));
+
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorios y/o Datos Válidos");
+        }
+        let options = {//opciones para la petición
+            method: 'POST',
+            body: JSON.stringify(await info),
+            headers: { "Content-Type": "application/json" }
+        }
+        let pet = await fetch('/svc', options);
+        let res = await pet.json();
+
+        if (res.status == 200) {
+            $.notify("Quality Control Registrado Correctamente", "success");
+            $('#piezasQC').find("input").val("");
+        } else if (res.status == 500) {
+            $.notify("Ocurrió un error SQL");
+        }
+    });
+}
 function initLogin() {
     $('#login').on('click', async function () {
         let data = {
             correo: $("#usuario").val(),
             pass: $("#pass").val()
-
         }
         if (data.correo != "" && data.pass != "") {
             let options = {

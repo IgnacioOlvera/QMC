@@ -6,7 +6,7 @@ var con = require('../conexion.js');
 var tiempo = new Date();
 var md_auth = require('../middlewares/autenticacion.js');
 //Envíos
-api.post('/BillOfLanding', function (req, res) {
+api.post('/BillOfLanding', md_auth.ensureAuth, function (req, res) {
     info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -797,7 +797,7 @@ api.post('/BillOfLanding', function (req, res) {
     });
 });
 
-api.post('/OrderSheet', function (req, res) {
+api.post('/OrderSheet', md_auth.ensureAuth, function (req, res) {
     let info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -1255,7 +1255,7 @@ api.post('/OrderSheet', function (req, res) {
 
 });
 
-api.post('/PackingList', function (req, res) {
+api.post('/PackingList', md_auth.ensureAuth, function (req, res) {
     let info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -1648,7 +1648,7 @@ api.post('/PackingList', function (req, res) {
 });
 
 //Recibos
-api.post('/Receiving', function (req, res) {
+api.post('/Receiving', md_auth.ensureAuth, function (req, res) {
     let info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -1997,7 +1997,7 @@ api.post('/Receiving', function (req, res) {
     });
 });
 
-api.get('/ReleaseReceiving', async function (req, res) {
+api.get('/ReleaseReceiving', md_auth.ensureAuth, async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
         con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre,nota invoice, id_candado padlock, id_contendor conteiner from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
@@ -2121,7 +2121,7 @@ api.get('/ReleaseReceiving', async function (req, res) {
     });
 });
 
-api.get('/ReleaseReceiving', async function (req, res) {
+api.get('/ReleaseReceiving', md_auth.ensureAuth, async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
         con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
