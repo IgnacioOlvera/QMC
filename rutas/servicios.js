@@ -2,7 +2,8 @@ var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
 var md_auth = require('../middlewares/autenticacion.js');
-api.get('/servicio/:id?', function (req, res) {
+var md_nivel = require('../middlewares/nivel.js');
+api.get('/servicio/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     //Obtener a quién se le brinda un servicio en específico
     if (req.params.id) {
         var id_servicio = req.params.id;
@@ -11,9 +12,9 @@ api.get('/servicio/:id?', function (req, res) {
         a.id_cliente,
         a.nombre
       from (select * from servicios where id_servicio=${id_servicio}) b inner join clientes a on a.id_servicio = b.id_servicio;`, function (err, rows) {
-            if (err) throw err
-            else res.send(rows);
-        });
+                if (err) throw err
+                else res.send(rows);
+            });
         //Obtener el servicio que se le brinda a cada cliente.
     } else {
         con.query("select b.nom_servicio, a.id_cliente,a.nombre from servicios b inner join clientes a on a.id_servicio=b.id_servicio;", function (error, rows) {
@@ -23,13 +24,13 @@ api.get('/servicio/:id?', function (req, res) {
     }
 });
 
-api.post('/servicio/:b', function (req, res) {
+api.post('/servicio/:b', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     let servicio = req.body;
     let sql = "";
     let b = req.params.b;//Bandera para determinar si es nuevo registro o actualización
-    if (servicio != null&&(b==0||b==1)) {
+    if (servicio != null && (b == 0 || b == 1)) {
         let id_servicio = servicio.id_servicio,
-        nombre=servicio.nombre;
+            nombre = servicio.nombre;
 
         if (id_servicio != null && nombre != null) {
             //Actualizar Servicio
@@ -58,7 +59,7 @@ api.post('/servicio/:b', function (req, res) {
     }
 });
 //Eliminar Servicio
-api.delete('/servicio/:id', function (req, res) {
+api.delete('/servicio/:id', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
         con.query(`delete from servicios where id_servicio=${id}`, function (err) {

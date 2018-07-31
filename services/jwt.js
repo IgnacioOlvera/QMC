@@ -9,7 +9,7 @@ exports.createToken = function (user) {
         nivel: user.nivel,
         pass: user.pass,
         iat: moment().unix(),
-        exp: moment().add(8, 'hours').unix()
+        exp: moment().add(10.6, 'hours').unix()
     };
     return jwt.encode(payload, secret);
 }

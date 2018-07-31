@@ -2,8 +2,9 @@ var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
 var md_auth = require('../middlewares/autenticacion.js');
+var md_nivel = require('../middlewares/nivel.js');
 
-api.get('/contacto/:id?', function (req, res) {
+api.get('/contacto/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     if (req.params.id) {//Si existe id, seleccion todos los contactos de un cliente.
         var id_cliente = req.params.id;
         con.query(`select
@@ -22,7 +23,7 @@ api.get('/contacto/:id?', function (req, res) {
     }
 });
 
-api.post('/contacto/:b', function (req, res) {
+api.post('/contacto/:b', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let contacto = req.body;
     let sql = "";
     let b = req.params.b;//Bandera para determinar si es nuevo registro o actualización
@@ -62,7 +63,7 @@ api.post('/contacto/:b', function (req, res) {
     }
 });
 //Eliminar Contacto
-api.put('/contacto/:id', function (req, res) {
+api.put('/contacto/:id',[ md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
         con.query(`update contactos set estado = 0 where id_contacto=${id}`, function (err) {

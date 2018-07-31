@@ -2,8 +2,9 @@ var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
 var md_auth = require('../middlewares/autenticacion.js');
+var md_nivel = require('../middlewares/nivel.js');
 
-api.get('/cliente/:id?/:idS?', function (req, res) {
+api.get('/cliente/:id?/:idS?', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     idS = req.params.idS;
     id = req.params.id;
     //Seleccionar un almacén en específico
@@ -27,7 +28,7 @@ api.get('/cliente/:id?/:idS?', function (req, res) {
     }
 });
 
-api.get('/clienteNat/:id?', function (req, res) {
+api.get('/clienteNat/:id?',[ md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     //Seleccionar un almacén en específico
     if (req.params.id) {
         var naturaleza = req.params.id;
@@ -44,7 +45,7 @@ api.get('/clienteNat/:id?', function (req, res) {
     }
 });
 
-api.post('/cliente/:b', function (req, res) {
+api.post('/cliente/:b', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     let cliente = req.body;
     let sql = "";
     let b = req.params.b;//Bandera para identificar si es actualización o inserción
@@ -82,7 +83,7 @@ api.post('/cliente/:b', function (req, res) {
     }
 });
 //Eliminar Cliente
-api.delete('/cliente/:id', function (req, res) {
+api.delete('/cliente/:id', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
         con.query(`delete from clientes where id_cliente=${id}`, function (err) {
@@ -95,7 +96,7 @@ api.delete('/cliente/:id', function (req, res) {
 });
 /////////////////////////////////////////////////////////Decidir si se queda o no////////////////////////////////////////////////////////////////////////////////////////////
 //Seleccionar partes que provee el cliente
-api.get('/proveedor/:id?', function (req, res) {
+api.get('/proveedor/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     let sql = "";
     if (req.params.id) {//si existe id en el URL, se selecciona las partes que surte el cliente
         let id_cliente = req.params.id

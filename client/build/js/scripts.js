@@ -1,3 +1,7 @@
+$('#logout').on('click', function () {
+    //document.cookie = `authorization=;`;
+    window.location.replace("/login");
+});
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
     let mensual = echarts.init(document.getElementById('mensual'));
@@ -13,7 +17,7 @@ async function initInicio() {
     });
 
     url = "/MensualRepo";
-    pet = await fetch(url);
+    pet = await fetch(url,options);
     result = await pet.json();
     result.forEach(res => {
         entr.push(parseInt(res.recibos));
@@ -1294,9 +1298,8 @@ function initLogin() {
                 document.cookie = `authorization=${res.token}`;
                 window.location.replace("/inicio");
             } else {
-                $.notify('Falta Ingresar Usuario y/o Contraseña');
+                $.notify(res.message);
             }
-
         } else {
             $.notify('Falta Ingresar Usuario y/o Contraseña');
         }

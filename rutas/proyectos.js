@@ -2,14 +2,15 @@ var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
 var md_auth = require('../middlewares/autenticacion.js');
-api.get('/proyectos', function (req, res) {
+var md_nivel = require('../middlewares/nivel.js');
+api.get('/proyectos', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     con.query('select p.*, c.nombre propietario from proyectos p inner join clientes c on p.id_cliente=c.id_cliente', function (err, rows) {
         if (err) throw err
         else res.send(rows);
     });
 });
 
-api.post('/proyectos/:id', function (req, res) {
+api.post('/proyectos/:id',[ md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
     if (req.body != null && (req.params.id == 0 || req.params.id == 1)) {
         let proyecto = req.body;
         let option = req.params.id;

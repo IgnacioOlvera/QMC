@@ -2,16 +2,17 @@ var con = require('../conexion.js');
 var express = require('express');
 var api = express.Router();
 var md_auth = require('../middlewares/autenticacion.js');
+var md_nivel = require('../middlewares/nivel.js');
 
 //Regresa historial de movimientos
-api.get('/movimientos', function (req, res) {
+api.get('/movimientos', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let sql = `select if (id_destino is null, 'I' ,'O') clas ,date_format(m.fecha,'%d/%m/%Y') fechaf,m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
         else res.send(rows);
     });
 });
-api.get('/SemanalRepo', function (req, res) {
+api.get('/SemanalRepo', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
 
     let sql = `select (select count(*) from movimientos_almacenes where id_destino is not null and week(fecha) = week(m.fecha))envios, (select count(*) from movimientos_almacenes where id_destino is null and week(fecha) = week(m.fecha)) recibos, date_format(fecha, '%d/%m/%Y') FechaMov, date_format(DATE_SUB(fecha, INTERVAL DAYOFWEEK(fecha) - 1 DAY), '%d/%m/%Y') inicio, date_format(DATE_ADD(fecha, INTERVAL 7 - DAYOFWEEK(fecha) DAY), '%d/%m/%Y') final from movimientos_almacenes m group by week(fecha);`;
 
@@ -21,7 +22,7 @@ api.get('/SemanalRepo', function (req, res) {
     });
 
 });
-api.get('/MensualRepo', function (req, res) {
+api.get('/MensualRepo', md_nivel.ensureLevel1, function (req, res) {
     con.query("SET lc_time_names = 'es_ES';", function (err) {
         if (err) throw err
         else {
@@ -37,7 +38,7 @@ api.get('/MensualRepo', function (req, res) {
 
 
 //Movimientos dentro de fechas
-api.post('/movimientosFecha', function (req, res) {
+api.post('/movimientosFecha', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let fechas = req.body;
     if (fechas.fecha_inicio && fechas.fecha_final) {
         let sql = `select id_movimiento from movimientos_almacenes where date_format(fecha,'%Y-%m-%d') between str_to_date('${fechas.fecha_inicio}', '%d/%m/%Y') and str_to_date('${fechas.fecha_final}', '%d/%m/%Y')`;
@@ -56,7 +57,7 @@ api.post('/movimientosFecha', function (req, res) {
 });
 
 //Regresa historial de Entradas
-api.get('/MoveEntradas', function (req, res) {
+api.get('/MoveEntradas', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let sql = `select m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino) destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is null order by fecha;`;
     con.query(sql, function (err, rows) {
         if (err) throw err
@@ -65,7 +66,7 @@ api.get('/MoveEntradas', function (req, res) {
 });
 
 //Regresa Historial de Salidas
-api.get('/MoveSalidas', function (req, res) {
+api.get('/MoveSalidas', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let sql = `select m.*, a.nombre 1almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)   destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte and m.id_destino is not null order by fecha;`
     con.query(sql, function (err, rows) {
         if (err) throw err
@@ -74,7 +75,7 @@ api.get('/MoveSalidas', function (req, res) {
 });
 
 //Registrar entrada de piezas
-api.post('/entradas', function (req, res) {
+api.post('/entradas', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let f = new Date();
     cad = f.getHours() + ":" + ("0" + f.getMinutes()).slice(-2) + ":" + f.getSeconds();
     let cont = 0;
@@ -138,7 +139,7 @@ api.post('/entradas', function (req, res) {
     }
 });
 
-api.post('/salidas', function (req, res) {
+api.post('/salidas', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let f = new Date();
     cad = f.getHours() + ":" + ("0" + f.getMinutes()).slice(-2) + ":" + f.getSeconds();
     let cont = 1;
@@ -151,7 +152,7 @@ api.post('/salidas', function (req, res) {
         fecha = salida.fecha || null,
         secuencia = salida.secuencia || null,
         peso = salida.peso || null,
-        nota = salida.id_nota || null,
+        nota = (salida.id_nota == "") ? `'${salida.id_nota}'` : null,
         candado = (salida.candado == "") ? null : `'${salida.candado}'`,
         contenedor = (salida.contenedor == "") ? null : `'${salida.contenedor}'`;
     consultas = [`insert into movimientos_almacenes values(null,1,${proveedor},${destino},(select no_parte from partes where id_proveedor=4),${cantidad},(select count(*) from costales),(select count(*)-${cantidad} from costales),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,null,null,'${secuencia}',${peso},${nota})`, `update partes set existencia=existencia-${cantidad} where no_parte=(select no_parte from (select no_parte from partes where id_proveedor=4) b)`, `delete from costales where secuencia='${secuencia}'`];
@@ -196,7 +197,7 @@ api.post('/salidas', function (req, res) {
     }
 });
 //0 eliminar, 1 modificar
-api.post('movimientos/:id/:a', function (req, res) {
+api.post('movimientos/:id/:a', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let entrada = req.body;
     let id = req.params.id;
     let a = req.params.a;

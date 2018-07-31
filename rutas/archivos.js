@@ -5,8 +5,9 @@ var path = require('path');
 var con = require('../conexion.js');
 var tiempo = new Date();
 var md_auth = require('../middlewares/autenticacion.js');
+var md_nivel = require('../middlewares/nivel.js');
 //Envíos
-api.post('/BillOfLanding', md_auth.ensureAuth, function (req, res) {
+api.post('/BillOfLanding', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -797,7 +798,7 @@ api.post('/BillOfLanding', md_auth.ensureAuth, function (req, res) {
     });
 });
 
-api.post('/OrderSheet', md_auth.ensureAuth, function (req, res) {
+api.post('/OrderSheet', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -1255,7 +1256,7 @@ api.post('/OrderSheet', md_auth.ensureAuth, function (req, res) {
 
 });
 
-api.post('/PackingList', md_auth.ensureAuth, function (req, res) {
+api.post('/PackingList', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -1648,7 +1649,7 @@ api.post('/PackingList', md_auth.ensureAuth, function (req, res) {
 });
 
 //Recibos
-api.post('/Receiving', md_auth.ensureAuth, function (req, res) {
+api.post('/Receiving', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
     let info = req.body;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
@@ -1997,7 +1998,7 @@ api.post('/Receiving', md_auth.ensureAuth, function (req, res) {
     });
 });
 
-api.get('/ReleaseReceiving', md_auth.ensureAuth, async function (req, res) {
+api.get('/ReleaseReceiving', [md_auth.ensureAuth, md_nivel.ensureLevel2], async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
         con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre,nota invoice, id_candado padlock, id_contendor conteiner from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
@@ -2121,7 +2122,7 @@ api.get('/ReleaseReceiving', md_auth.ensureAuth, async function (req, res) {
     });
 });
 
-api.get('/ReleaseReceiving', md_auth.ensureAuth, async function (req, res) {
+api.get('/ReleaseReceiving', [md_auth.ensureAuth, md_nivel.ensureLevel2], async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
         con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
@@ -2236,6 +2237,652 @@ api.get('/ReleaseReceiving', md_auth.ensureAuth, async function (req, res) {
             res.send({ message: 'Archivo creado', status: '200' });
         }
     });
+});
+
+api.get('/InventoryControl', [md_auth.ensureAuth, md_nivel.ensureLevel2], async function (req, res) {
+    let meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Agu', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let fechaCreacion = new Date();
+    let wb = new xl.Workbook({
+        defaultFont: {
+            size: 10,
+            name: "Arial"
+        }
+    });
+    let ws;
+    let info = null;
+    for (let i = 1; i <= fechaCreacion.getMonth() + 1; i++) {
+        info = await new Promise(function (resolve, reject) {
+            con.query(`select p.no_parte, date_format(fecha,'%d/%m/%Y') fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet) pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                                  rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                                  rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                                  shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                                  shp_qty, cant_posterior end_case, p.existencia end_qty,cq_ant,cq_post,svc_ant,svc_post from movimientos_almacenes ma inner join partes p on ma.no_parte = p.no_parte where p.id_proveedor != 4 and month(fecha)=${i} order by ma.no_parte;`, function (err, rows) {
+                if (err) return reject(err);
+                else resolve(rows);
+            });
+        });
+
+        //Fin de Pie de Documento
+
+        if (info.length > 1) {
+            let inicio = 11;
+            let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+            let fecha = new Date(`${info[0].fecha.split('\/')[2]}`, `${info[0].fecha.split('\/')[1] - 1}`, `${info[0].fecha.split('\/')[0]}`);
+            fecha.toLocaleDateString('es-MX', options);
+
+            let bandera = true;
+            let mes = meses[fecha.getMonth()];
+            let data = info[0];
+            let comienzo = inicio;
+            ws = wb.addWorksheet(`${mes}`, {
+                pageSetup: {
+                    paperSize: 'LETTER_PAPER',
+                    usePrinterDefaults: true,
+                    fitToWidth: 1,
+                    orientation: 'landscape'
+                },
+                sheetView: {
+                    showGridLines: false
+                },
+                margins: {
+                    bottom: 0,
+                    top: 0
+                },
+                headerFooter: {
+                    scaleWithDoc: true
+                }
+            });
+            ws.column(1).setWidth(2);
+            ws.addImage({
+                path: path.join(__dirname, '../client/production/images/gensenLogo.png'),
+                type: 'picture',
+                position: {
+                    type: 'oneCellAnchor',
+                    from: {
+                        col: 2,
+                        colOff: '0.2in',
+                        row: 1,
+                        rowOff: '0.05in'
+                    },
+                    to: {
+                        col: 4,
+                        colOff: 0,
+                        row: 6,
+                        rowOff: 0
+                    }
+                }
+            });
+            ws.cell(5, 2, 5, 2).string('NINGBO ZHONGJUN UEHARA');
+            ws.cell(6, 2, 6, 2).string('AUTOMOBILE PARTS CO.,LTD');
+            ws.cell(7, 2, 7, 2).string('TIANYUAN, CIXI,');
+            ws.cell(8, 2, 8, 2).string('ZHEJIANG, PRC');
+            ws.cell(9, 2, 9, 2).string('P. C. 315325');
+            ws.cell(10, 2, 10, 2).string('AS OF');
+            ws.cell(10, 3, 10, 3).string(`${fechaCreacion.getDate()}/${fechaCreacion.getMonth() + 1}/${fechaCreacion.getFullYear()}`); 7
+            let index = 1;
+
+            while (index <= info.length) {
+                try {
+                    if (bandera) {
+                        ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-OK`).style({
+                            font: { bold: true, underline: true }
+                        });
+                        inicio++;
+                        ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+                        ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+                        ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+                        ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+                        ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+                        ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+                        ws.cell(inicio, 9, inicio, 9).string('END CASE');
+                        ws.cell(inicio, 10, inicio, 10).string('END QTY');
+                        ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+                        inicio++;
+                        comienzo = inicio;
+                        ws.cell(inicio, 2, inicio, 2).string('BBF');
+                        ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
+                        ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
+                        ws.cell(inicio, 5, inicio, 5).number(data.rcv_case);
+                        ws.cell(inicio, 6, inicio, 6).number(data.rcv_qty);
+                        ws.cell(inicio, 7, inicio, 7).number(data.shp_case);
+                        ws.cell(inicio, 8, inicio, 8).number(data.shp_qty);
+                        ws.cell(inicio, 9, inicio, 9).number(data.end_case);
+                        ws.cell(inicio, 10, inicio, 10).number(data.end_qty);
+                        inicio++;
+                        data = info[index];
+                        bandera = !bandera;
+                    }
+                    if (data.no_parte == info[index - 1].no_parte) {
+                        console.log(data);
+                        ws.cell(inicio, 2, inicio, 2).string(data.fecha);
+                        ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
+                        ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
+                        ws.cell(inicio, 5, inicio, 5).number(data.rcv_case);
+                        ws.cell(inicio, 6, inicio, 6).number(data.rcv_qty);
+                        ws.cell(inicio, 7, inicio, 7).number(data.shp_case);
+                        ws.cell(inicio, 8, inicio, 8).number(data.shp_qty);
+                        ws.cell(inicio, 9, inicio, 9).number(data.end_case);
+                        ws.cell(inicio, 10, inicio, 10).number(data.end_qty);
+                        index++;
+                        data = info[index];
+                        inicio++;
+                    } else {
+                        ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        inicio++;
+                        ws.cell(inicio, 2, inicio, 2).string(`${info[index - 1].no_parte}-QC`).style({
+                            font: { bold: true, underline: true }
+                        });
+                        inicio++;
+                        ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+                        ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+                        ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+                        ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+                        ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+                        ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+                        ws.cell(inicio, 9, inicio, 9).string('END CASE');
+                        ws.cell(inicio, 10, inicio, 10).string('END QTY');
+                        ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+                        inicio++;
+                        comienzo = inicio;
+                        ws.cell(inicio, 2, inicio, 2).string('BBF');
+                        ws.cell(inicio, 3, inicio, 3).number(info[index - 1].cq_ant);
+                        ws.cell(inicio, 4, inicio, 4).number(info[index - 1].cq_post);
+                        ws.cell(inicio, 5, inicio, 5).number(0);
+                        ws.cell(inicio, 6, inicio, 6).number(0);
+                        ws.cell(inicio, 7, inicio, 7).number(0);
+                        ws.cell(inicio, 8, inicio, 8).number(0);
+                        ws.cell(inicio, 9, inicio, 9).number(info[index - 1].cq_ant);
+                        ws.cell(inicio, 10, inicio, 10).number(info[index - 1].cq_post);
+                        inicio++;
+                        ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        inicio++;
+                        ws.cell(inicio, 2, inicio, 2).string(`${info[index - 1].no_parte}-SVC`).style({
+                            font: { bold: true, underline: true }
+                        });
+                        inicio++;
+                        ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+                        ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+                        ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+                        ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+                        ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+                        ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+                        ws.cell(inicio, 9, inicio, 9).string('END CASE');
+                        ws.cell(inicio, 10, inicio, 10).string('END QTY');
+                        ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+                        inicio++;
+                        comienzo = inicio;
+                        ws.cell(inicio, 2, inicio, 2).string('BBF');
+                        ws.cell(inicio, 3, inicio, 3).number(info[index - 1].svc_ant);
+                        ws.cell(inicio, 4, inicio, 4).number(info[index - 1].svc_post);
+                        ws.cell(inicio, 5, inicio, 5).number(0);
+                        ws.cell(inicio, 6, inicio, 6).number(0);
+                        ws.cell(inicio, 7, inicio, 7).number(0);
+                        ws.cell(inicio, 8, inicio, 8).number(0);
+                        ws.cell(inicio, 9, inicio, 9).number(info[index - 1].svc_ant);
+                        ws.cell(inicio, 10, inicio, 10).number(info[index - 1].svc_post);
+                        inicio++;
+                        ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+                            font: { bold: true }
+                        });
+                        inicio++;
+                        index++;
+                        bandera = !bandera;
+                    }
+                } catch (e) {
+                    data = info[index - 1];
+                    ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    inicio++;
+                    ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-QC`).style({
+                        font: { bold: true, underline: true }
+                    });
+                    inicio++;
+                    ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+                    ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+                    ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+                    ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+                    ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+                    ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+                    ws.cell(inicio, 9, inicio, 9).string('END CASE');
+                    ws.cell(inicio, 10, inicio, 10).string('END QTY');
+                    ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+                    inicio++;
+                    comienzo = inicio;
+                    ws.cell(inicio, 2, inicio, 2).string('BBF');
+                    ws.cell(inicio, 3, inicio, 3).number(data.cq_ant);
+                    ws.cell(inicio, 4, inicio, 4).number(data.cq_post);
+                    ws.cell(inicio, 5, inicio, 5).number(0);
+                    ws.cell(inicio, 6, inicio, 6).number(0);
+                    ws.cell(inicio, 7, inicio, 7).number(0);
+                    ws.cell(inicio, 8, inicio, 8).number(0);
+                    ws.cell(inicio, 9, inicio, 9).number(data.cq_ant);
+                    ws.cell(inicio, 10, inicio, 10).number(data.cq_post);
+                    inicio++;
+                    ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    inicio++;
+                    ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-SVC`).style({
+                        font: { bold: true, underline: true }
+                    });
+                    inicio++;
+                    ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+                    ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+                    ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+                    ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+                    ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+                    ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+                    ws.cell(inicio, 9, inicio, 9).string('END CASE');
+                    ws.cell(inicio, 10, inicio, 10).string('END QTY');
+                    ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+                    inicio++;
+                    comienzo = inicio;
+                    ws.cell(inicio, 2, inicio, 2).string('BBF');
+                    ws.cell(inicio, 3, inicio, 3).number(data.svc_ant);
+                    ws.cell(inicio, 4, inicio, 4).number(data.svc_post);
+                    ws.cell(inicio, 5, inicio, 5).number(0);
+                    ws.cell(inicio, 6, inicio, 6).number(0);
+                    ws.cell(inicio, 7, inicio, 7).number(0);
+                    ws.cell(inicio, 8, inicio, 8).number(0);
+                    ws.cell(inicio, 9, inicio, 9).number(data.svc_ant);
+                    ws.cell(inicio, 10, inicio, 10).number(data.svc_post);
+                    inicio++;
+                    ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+                        font: { bold: true }
+                    });
+                    inicio++;
+                    index++;
+                }
+            }
+        }
+    }
+
+    // for (let i = 0; i < info.length; i++) {
+    //     if (mes != meses[fecha.getMonth()]) {
+    //         ws = wb.addWorksheet(`${mes}`, {
+    //             pageSetup: {
+    //                 paperSize: 'LETTER_PAPER',
+    //                 usePrinterDefaults: true,
+    //                 fitToWidth: 1,
+    //                 orientation: 'landscape'
+    //             },
+    //             sheetView: {
+    //                 showGridLines: false
+    //             },
+    //             margins: {
+    //                 bottom: 0,
+    //                 top: 0
+    //             },
+    //             headerFooter: {
+    //                 scaleWithDoc: true
+    //             }
+    //         });
+    //         ws.column(1).setWidth(2);
+    //         ws.addImage({
+    //             path: path.join(__dirname, '../client/production/images/gensenLogo.png'),
+    //             type: 'picture',
+    //             position: {
+    //                 type: 'oneCellAnchor',
+    //                 from: {
+    //                     col: 2,
+    //                     colOff: '0.2in',
+    //                     row: 1,
+    //                     rowOff: '0.05in'
+    //                 },
+    //                 to: {
+    //                     col: 4,
+    //                     colOff: 0,
+    //                     row: 6,
+    //                     rowOff: 0
+    //                 }
+    //             }
+    //         });
+    //         ws.cell(5, 2, 5, 2).string('NINGBO ZHONGJUN UEHARA');
+    //         ws.cell(6, 2, 6, 2).string('AUTOMOBILE PARTS CO.,LTD');
+    //         ws.cell(7, 2, 7, 2).string('TIANYUAN, CIXI,');
+    //         ws.cell(8, 2, 8, 2).string('ZHEJIANG, PRC');
+    //         ws.cell(9, 2, 9, 2).string('P. C. 315325');
+    //         ws.cell(10, 2, 10, 2).string('AS OF');
+    //         ws.cell(10, 3, 10, 3).string(`${fechaCreacion.getDate()}/${fechaCreacion.getMonth() + 1}/${fechaCreacion.getFullYear()}`);
+    //     }
+    //     if (bandera) {
+    //         ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-OK`).style({
+    //             font: { bold: true, underline: true }
+    //         });
+    //         inicio++;
+    //         ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+    //         ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+    //         ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+    //         ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+    //         ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+    //         ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+    //         ws.cell(inicio, 9, inicio, 9).string('END CASE');
+    //         ws.cell(inicio, 10, inicio, 10).string('END QTY');
+    //         ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+    //         inicio++;
+    //         comienzo = inicio;
+    //         ws.cell(inicio, 2, inicio, 2).string('BBF');
+    //         ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
+    //         ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
+    //         ws.cell(inicio, 5, inicio, 5).number(data.rcv_case);
+    //         ws.cell(inicio, 6, inicio, 6).number(data.rcv_qty);
+    //         ws.cell(inicio, 7, inicio, 7).number(data.shp_case);
+    //         ws.cell(inicio, 8, inicio, 8).number(data.shp_qty);
+    //         ws.cell(inicio, 9, inicio, 9).number(data.end_case);
+    //         ws.cell(inicio, 10, inicio, 10).number(data.end_qty);
+    //         inicio++;
+    //         data = info[i + 1];
+    //         bandera = !bandera;
+    //     }
+    //     try {
+    //         if (data.no_parte == info[i].no_parte) {
+    //             ws.cell(inicio, 2, inicio, 2).string(data.fecha);
+    //             ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
+    //             ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
+    //             ws.cell(inicio, 5, inicio, 5).number(data.rcv_case);
+    //             ws.cell(inicio, 6, inicio, 6).number(data.rcv_qty);
+    //             ws.cell(inicio, 7, inicio, 7).number(data.shp_case);
+    //             ws.cell(inicio, 8, inicio, 8).number(data.shp_qty);
+    //             ws.cell(inicio, 9, inicio, 9).number(data.end_case);
+    //             ws.cell(inicio, 10, inicio, 10).number(data.end_qty);
+    //             //data = info[i];
+    //             inicio++;
+    //         } else {
+    //             ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+    //                 font: { bold: true }
+    //             });
+    //             inicio++
+    //             // ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-QC`).style({
+    //             //     font: { bold: true, underline: true }
+    //             // });
+    //             // inicio++;
+    //             // ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+    //             // ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+    //             // ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+    //             // ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+    //             // ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+    //             // ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+    //             // ws.cell(inicio, 9, inicio, 9).string('END CASE');
+    //             // ws.cell(inicio, 10, inicio, 10).string('END QTY');
+    //             // ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+    //             // inicio++;
+    //             // comienzo = inicio;
+    //             // ws.cell(inicio, 2, inicio, 2).string('BBF');
+    //             // ws.cell(inicio, 3, inicio, 3).number(data.cq_ant);
+    //             // ws.cell(inicio, 4, inicio, 4).number(data.cq_post);
+    //             // ws.cell(inicio, 5, inicio, 5).number(0);
+    //             // ws.cell(inicio, 6, inicio, 6).number(0);
+    //             // ws.cell(inicio, 7, inicio, 7).number(0);
+    //             // ws.cell(inicio, 8, inicio, 8).number(0);
+    //             // ws.cell(inicio, 9, inicio, 9).number(data.cq_ant);
+    //             // ws.cell(inicio, 10, inicio, 10).number(data.cq_post);
+    //             // inicio++;
+    //             // ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // inicio++;
+    //             // ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-SVC`).style({
+    //             //     font: { bold: true, underline: true }
+    //             // });
+    //             // inicio++;
+    //             // ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
+    //             // ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
+    //             // ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
+    //             // ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
+    //             // ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
+    //             // ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
+    //             // ws.cell(inicio, 9, inicio, 9).string('END CASE');
+    //             // ws.cell(inicio, 10, inicio, 10).string('END QTY');
+    //             // ws.cell(inicio, 11, inicio, 11).string('REMARKS');
+    //             // inicio++;
+    //             // comienzo = inicio;
+    //             // ws.cell(inicio, 2, inicio, 2).string('BBF');
+    //             // ws.cell(inicio, 3, inicio, 3).number(data.svc_ant);
+    //             // ws.cell(inicio, 4, inicio, 4).number(data.svc_post);
+    //             // ws.cell(inicio, 5, inicio, 5).number(0);
+    //             // ws.cell(inicio, 6, inicio, 6).number(0);
+    //             // ws.cell(inicio, 7, inicio, 7).number(0);
+    //             // ws.cell(inicio, 8, inicio, 8).number(0);
+    //             // ws.cell(inicio, 9, inicio, 9).number(data.svc_ant);
+    //             // ws.cell(inicio, 10, inicio, 10).number(data.svc_post);
+    //             // inicio++;
+    //             // ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
+    //             //     font: { bold: true }
+    //             // });
+    //             // inicio++;
+    //             //data = info[i+1];
+    //             bandera = !bandera;
+    //         }
+    //     } catch (e) {
+    //         console.log('vacio');
+    //     }
+
+    // }
+    wb.write(path.join(__dirname, `../docs/Inventory.xlsx`), function (err) {
+        if (err) throw err
+        else {
+            res.send({ message: 'Archivo creado', status: '200' });
+        }
+    });
+
 });
 
 module.exports = api;
