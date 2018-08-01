@@ -1,20 +1,16 @@
 var jwt = require('jwt-simple');
-var moment = require('moment');
 var secret = 'clave_secreta_curso';
 
 function ensureLevel1(req, res, next) {
     //Tiene Acceso a todo el sistema
-    var token = req.cookies.authorization, payload = "";
+    var token = req.headers.authorization;
     try {
-        payload = jwt.decode(token, secret);
+        var payload = jwt.decode(token, secret);
         if (payload.nivel != 1) {
-            res.redirect('/login');
-            return;
-
+            return res.send(`<h1>No tiene autorización para acceder a estos métodos</h1>`);
         }
     } catch (ex) {
-        res.redirect('/inicio');
-        return;
+        return res.send("<h1>No tiene autorización para acceder a estos métodos</h1>");
     }
     next();
 }
@@ -22,18 +18,17 @@ function ensureLevel1(req, res, next) {
 function ensureLevel2(req, res, next) {
     //Tiene Acceso a todo el sistema
     try {
-        var token = req.cookies.authorization, payload = "";
-        payload = jwt.decode(token, secret);
+        var token = req.headers.authorization;
+        var payload = jwt.decode(token, secret);
         if (payload.nivel > 2) {
-            res.redirect('/login');
-            return;
+            return res.send("<h1>No tiene autorización para acceder a estos métodos</h1>");
         }
     } catch (ex) {
-        res.redirect('/inicio');
-        return;
+        return res.send("<h1>No tiene autorización para acceder a estos métodos</h1>");
     }
     next();
 }
+
 
 module.exports = {
     ensureLevel1,

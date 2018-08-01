@@ -1,14 +1,18 @@
 $('#logout').on('click', function () {
-    //document.cookie = `authorization=;`;
+    setCookie('authorization', "");
+    localStorage.clear();
     window.location.replace("/login");
 });
+
+$("li").not(`[data-${localStorage.getItem("lvl")}]`).remove();
+
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
     let mensual = echarts.init(document.getElementById('mensual'));
     let url = "/SemanalRepo";
     let entradas = [], salidas = [], categorias = [];
     let entr = [], sal = [], cat = [];
-    let pet = await fetch(url);
+    let pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
     let result = await pet.json();
     result.forEach(res => {
         entradas.push(parseInt(res.recibos));
@@ -17,7 +21,7 @@ async function initInicio() {
     });
 
     url = "/MensualRepo";
-    pet = await fetch(url,options);
+    pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
     result = await pet.json();
     result.forEach(res => {
         entr.push(parseInt(res.recibos));
@@ -169,7 +173,7 @@ async function initRecibo() {
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
         "ordering": false, "searching": false
     });
-    let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
+    let pet = await fetch("clienteNat/0", { headers: { authorization: getCookie("authorization") } });//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {//Llenado de select con todos lo clientes
@@ -201,7 +205,7 @@ async function initRecibo() {
         } else {
             $('#piezas').show('oculto');//mostrar la tabla de clientes normales
             $('#tablaTNET').hide('oculto');//ocultar la tabla de tnet
-            let pet = await fetch('/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
+            let pet = await fetch('/proveedor/' + $(this).val(), { headers: { authorization: getCookie("authorization") } });//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
@@ -240,7 +244,7 @@ async function initRecibo() {
                     let options = {//opciones para la petición
                         method: 'POST',
                         body: a,
-                        headers: { "Content-Type": "application/json" }
+                        headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
                     }
                     let c = await fetch('/entradas', options);//petición
                     let res = await c.json();
@@ -248,7 +252,7 @@ async function initRecibo() {
                     t.$('label').text('0');//regresar las cantidades a sus valores iniciales
                     if (res.status == 200) {
                         $.notify(res.message, "success");//mensaje del backend
-                        let p = await fetch(`/parte/${data[0]}`);
+                        let p = await fetch(`/parte/${data[0]}`, { headers: { authorization: getCookie("authorization") } });
                         let r = await p.json();
                         let part = r[0];
                         part.cant = cantidades[rowIdx];
@@ -261,7 +265,7 @@ async function initRecibo() {
 
             });
 
-            let pet = await fetch(`/cliente/${info.id_proveedor}`);
+            let pet = await fetch(`/cliente/${info.id_proveedor}`, { headers: { authorization: getCookie("authorization") } });
             let proveedor = await pet.json();
             info.cliente = JSON.parse(JSON.stringify(proveedor[0]));
             info.semana = moment(info.fecha, 'DD/MM/YYYY').week();
@@ -304,7 +308,7 @@ async function initRecibo() {
             let options = {//opciones de la petición
                 method: 'POST',
                 body: a,
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
             }
             let c = await fetch('/entradas', options);//petición
             let res = await c.json();
@@ -334,7 +338,7 @@ async function initRecibo() {
             cant_x_caja++;
         }
         info.partes = JSON.parse(JSON.stringify(partesRecibo));
-        let pet = await fetch(`/cliente/${info.id_proveedor}`);
+        let pet = await fetch(`/cliente/${info.id_proveedor}`, { headers: { authorization: getCookie("authorization") } });
         let proveedor = await pet.json();
         info.cliente = JSON.parse(JSON.stringify(proveedor[0]));
         info.semana = moment(info.fecha, 'DD/MM/YYYY').week();
@@ -363,7 +367,7 @@ async function initRecibo() {
         let options = {//opciones para la petición
             method: 'POST',
             body: JSON.stringify(info),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
         let ROK = pet.json();
@@ -384,14 +388,14 @@ async function initEnvios() {
         "ordering": false, "searching": false
     });
 
-    let pet = await fetch('/clienteNat/0');
+    let pet = await fetch('/clienteNat/0', { headers: { authorization: getCookie("authorization") } });
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
         (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
     let url = `/clienteNat/1`
-    pet = await fetch(url)
+    pet = await fetch(url, { headers: { authorization: getCookie("authorization") } })
     clientes = await pet.json();
     $('#in_clienteDest').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
@@ -407,7 +411,7 @@ async function initEnvios() {
         //console.log(a.toISOString(), b.toISOString(), c)
     });
     url = "/costales";
-    pet = await fetch(url);
+    pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
     let costales = await pet.json();
 
     costales.forEach(costal => {
@@ -425,7 +429,7 @@ async function initEnvios() {
         } else {
             $('#piezas').show('oculto');//mostrar la tabla de clientes normales
             $('#tablaTNET').hide('oculto');//ocultar la tabla de tnet
-            let pet = await fetch('/proveedor/' + $(this).val());//Petición para traer todas las piezas que surte un proveedor
+            let pet = await fetch('/proveedor/' + $(this).val(), { headers: { authorization: getCookie("authorization") } });//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
@@ -463,7 +467,7 @@ async function initEnvios() {
         BLinfo.fecha = a.fecha;
         BLinfo.semana = moment(a.fecha, 'DD/MM/YYYY').week();
         let direc = `/cliente/${destino}/${a.id_proveedor}`;
-        let f = await fetch(direc);
+        let f = await fetch(direc, { headers: { authorization: getCookie("authorization") } });
         let i = await f.json();
         BLinfo.cliente = JSON.parse(JSON.stringify(i));
         if (destino == 0 || a.id_proveedor == 0) {
@@ -480,7 +484,7 @@ async function initEnvios() {
                     let options = {//opciones para la petición
                         method: 'POST',
                         body: a,
-                        headers: { "Content-Type": "application/json" }
+                        headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
                     }
                     let c = await fetch('/salidas', options);//petición
                     let res = await c.json();
@@ -490,7 +494,7 @@ async function initEnvios() {
                         if (res.status == 200) {
                             $.notify(res.message, "success");//mensaje del backend
                             let url = `/parte/${data[0]}`;
-                            let p = await fetch(url);
+                            let p = await fetch(url, { headers: { authorization: getCookie("authorization") } });
                             let r = await p.json();
                             let part = {};
                             part.no_parte = r[0].no_parte;
@@ -523,7 +527,7 @@ async function initEnvios() {
         BLinfo.fecha = a.fecha;
         BLinfo.semana = moment(a.fecha, 'DD/MM/YYYY').week();
         let direc = `/cliente/${a.id_destino}/${a.id_proveedor}`;
-        let f = await fetch(direc);
+        let f = await fetch(direc, { headers: { authorization: getCookie("authorization") } });
         let i = await f.json();
         BLinfo.cliente = JSON.parse(JSON.stringify(i));
         let costalesEnvio = [];
@@ -543,7 +547,7 @@ async function initEnvios() {
                 let options = {//opciones de la petición
                     method: 'POST',
                     body: JSON.stringify(a),
-                    headers: { "Content-Type": "application/json" }
+                    headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
                 }
                 let c = await fetch('/salidas', options);//petición
                 let res = await c.json();
@@ -574,7 +578,7 @@ async function initEnvios() {
         let options = {//opciones para la petición
             method: 'POST',
             body: JSON.stringify(BLinfo),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
         let BLOK = await pet.json();
@@ -583,7 +587,7 @@ async function initEnvios() {
         let o = {
             method: 'POST',
             body: JSON.stringify(BLinfo),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet1 = await fetch(url1, o);
         let OSOK = await pet1.json();
@@ -592,7 +596,7 @@ async function initEnvios() {
         let p = {
             method: 'POST',
             body: JSON.stringify(BLinfo),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet2 = await fetch(url2, p);
         let PLOK = await pet2.json();
@@ -639,13 +643,13 @@ async function initPartes() {
             $('td', row).eq(4).css('background-color', "#" + fifoColorsTNET[data[4]]).html("");
         }
     });
-    let pet = await fetch('/clienteNat/0');
+    let pet = await fetch('/clienteNat/0', { headers: { authorization: getCookie("authorization") } });
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {
         (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
-    pet = await fetch("/costales");
+    pet = await fetch("/costales", { headers: { authorization: getCookie("authorization") } });
     let costales = await pet.json();
     let tnetmodals = "";
     costales.forEach(costal => {
@@ -670,7 +674,7 @@ async function initPartes() {
         let options = {
             method: 'post',
             body: JSON.stringify(form),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let url = "/costales";
         let pet = await fetch(url, options);
@@ -687,7 +691,7 @@ async function initPartes() {
             $(`#modal-${$(this).data("target")}`).modal('toggle');
         }
     });
-    let j = await fetch('/proyectos');
+    let j = await fetch('/proyectos', { headers: { authorization: getCookie("authorization") } });
     let proyectos = await j.json();
     let bandera = true;
     let sproyectos = "";
@@ -697,7 +701,7 @@ async function initPartes() {
     $('#in_proyecto').html(sproyectos);
     $('#in_cliente').on('change', async function () {
         if (bandera == true) {
-            let pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
+            let pet = await fetch('/proveedor', { headers: { authorization: getCookie("authorization") } });//Petición para traer todas las piezas que surte un proveedor
             let partes = await pet.json();
             partes.forEach(parte => {
                 (parte.exterior == null) ? parte.exterior = "" : parte.exterior;
@@ -724,7 +728,7 @@ async function initPartes() {
                 let parte = $(this).data("target");
                 let options = {
                     method: 'delete',
-                    headers: { "Content-Type": "application/json" }
+                    headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
                 }
                 let pet = await fetch(`/parte/${parte}`, options);
                 let res = await pet.json();
@@ -745,7 +749,7 @@ async function initPartes() {
                 let options = {
                     method: 'post',
                     body: JSON.stringify(form),
-                    headers: { "Content-Type": "application/json" }
+                    headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
                 }
                 let pet = await fetch('/parte/0', options);
                 let res = await pet.json();
@@ -777,7 +781,7 @@ async function initPartes() {
             let options = {
                 method: 'post',
                 body: form,
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
             }
             let url = "/parte/1"
             let pet = await fetch(url, options);
@@ -799,7 +803,7 @@ async function initClientes() {
         "searching": false
     });
     let url = "/cliente";
-    let pet = await fetch(url);
+    let pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
     let clientes = await pet.json();
     let modales = "", nat = ['Proveedor', 'Cliente'];
     clientes.forEach(cliente => {
@@ -820,7 +824,7 @@ async function initClientes() {
         let options = {
             method: 'post',
             body: JSON.stringify(form),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
         let res = await pet.json();
@@ -841,7 +845,7 @@ async function initClientes() {
         let url = "/cliente/" + cliente;
         let options = {
             method: 'delete',
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
         let res = await pet.json();
@@ -860,7 +864,7 @@ async function initClientes() {
         let options = {
             method: 'post',
             body: JSON.stringify(form),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
         let res = await pet.json();
@@ -888,7 +892,7 @@ var mov = $('#MovimientosInfo').DataTable({
 async function initMovimientos() {
 
     let url = "/movimientos"
-    let pet = await fetch(url);
+    let pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
     let movimientos = await pet.json();
     let modales = "";
     movimientos.forEach(movimiento => {
@@ -911,7 +915,7 @@ async function initMovimientos() {
     init_daterangepicker();
 }
 async function initContactos() {
-    let p = await fetch('/cliente');
+    let p = await fetch('/cliente', { headers: { authorization: getCookie("authorization") } });
     let clientes = await p.json();
     let selectCliente = '<select class="form-control" name="cliente" id="NuevoContactoCliente">';
     selectCliente += '<option value="0" selected disabled> Selección de cliente...</option>';
@@ -943,7 +947,7 @@ async function initContactos() {
         ], "searching": false
     });
     let url = "/contacto";
-    let pet = await fetch(url);
+    let pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
     let contactos = await pet.json();
     let modales = "";
     let cliente = ""
@@ -966,7 +970,7 @@ async function initContactos() {
         let options = {
             method: 'post',
             body: JSON.stringify(form),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let url = "/contacto/1";
         let pet = await fetch(url, options);
@@ -978,7 +982,7 @@ async function initContactos() {
                 info.clear();
                 $('#AgregarContactoModal').modal('toggle');
                 url = "/contacto";
-                pet = await fetch(url);
+                pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
                 let contactos = await pet.json();
                 contactos.forEach(contacto => {
                     info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}","estado":${contacto.estado}}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
@@ -999,7 +1003,7 @@ async function initContactos() {
         let options = {
             method: 'post',
             body: JSON.stringify(form),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let url = "/contacto/0";
         let pet = await fetch(url, options);
@@ -1011,7 +1015,7 @@ async function initContactos() {
                 info.clear();
                 $($(this).data("modal")).modal('toggle');
                 url = "/contacto";
-                pet = await fetch(url);
+                pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
                 let contactos = await pet.json();
                 contactos.forEach(contacto => {
                     info.row.add([`{"id_contacto":"${contacto.id_contacto}","id_cliente":"${contacto.id_cliente}","estado":${contacto.estado}}`, contacto.nombre, contacto.telefono, contacto.ext, contacto.correo, contacto.cliente, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-target="#modal-${contacto.id_contacto}"><span class="fa fa-edit"></span></button><button data-target="${contacto.id_contacto}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
@@ -1029,7 +1033,7 @@ async function initContactos() {
         let url = `/contacto/${$(this).data("target")}`;
         let options = {
             method: 'put',
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
         let res = await pet.json();
@@ -1062,7 +1066,7 @@ async function initProyectos() {
         ], "ordering": false, "searching": false
     });
 
-    let pet = await fetch('/clienteNat/0');
+    let pet = await fetch('/clienteNat/0', { headers: { authorization: getCookie("authorization") } });
     let clientes = await pet.json();
     $('.in_propietario').append('<option selected value="0"> Sección de cliente...</option>');
     clientes.forEach(cliente => {
@@ -1095,7 +1099,7 @@ async function initProyectos() {
     });
 
 
-    pet = await fetch('/proyectos');
+    pet = await fetch('/proyectos', { headers: { authorization: getCookie("authorization") } });
     let proyectos = await pet.json();
     let modalesProyectos = "";
     for (i in proyectos) {
@@ -1121,7 +1125,7 @@ async function initProyectos() {
             let options = {
                 method: 'post',
                 body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
             }
             let pet = await fetch(url, options);
             let res = await pet.json();
@@ -1157,13 +1161,13 @@ async function initQC() {
         ],
         "searching": false
     });
-    let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
+    let pet = await fetch("clienteNat/0", { headers: { authorization: getCookie("authorization") } });//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {//Llenado de select con todos lo clientes
         (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
-    pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
+    pet = await fetch('/proveedor', { headers: { authorization: getCookie("authorization") } });//Petición para traer todas las piezas que surte un proveedor
     let partes = await pet.json();
     t.rows().remove().draw();//Quitar todos los elementos de la tabla.
     partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
@@ -1197,7 +1201,7 @@ async function initQC() {
         let options = {//opciones para la petición
             method: 'POST',
             body: JSON.stringify(await info),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch('/qc', options);
         let res = await pet.json();
@@ -1227,13 +1231,13 @@ async function initSVC() {
         ],
         "searching": false
     });
-    let pet = await fetch("clienteNat/0");//petición para llenar combo de clientes proveedores
+    let pet = await fetch("clienteNat/0", { headers: { authorization: getCookie("authorization") } });//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
     $('#in_cliente').append('<option selected value="0"> Sección de cliente...</option>')
     clientes.forEach(cliente => {//Llenado de select con todos lo clientes
         (cliente.estado == 'ACTIVO') ? $('#in_cliente').append(`<option value='${cliente.id_cliente}'>${cliente.nombre}</option>`) : null;
     });
-    pet = await fetch('/proveedor');//Petición para traer todas las piezas que surte un proveedor
+    pet = await fetch('/proveedor', { headers: { authorization: getCookie("authorization") } });//Petición para traer todas las piezas que surte un proveedor
     let partes = await pet.json();
     t.rows().remove().draw();//Quitar todos los elementos de la tabla.
     partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
@@ -1267,7 +1271,7 @@ async function initSVC() {
         let options = {//opciones para la petición
             method: 'POST',
             body: JSON.stringify(await info),
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch('/svc', options);
         let res = await pet.json();
@@ -1290,13 +1294,18 @@ function initLogin() {
             let options = {
                 method: 'post',
                 body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json"}
             }
             let pet = await fetch('/log', options);
             let res = await pet.json();
             if (res.status == 200) {
-                document.cookie = `authorization=${res.token}`;
-                window.location.replace("/inicio");
+                setCookie("authorization", res.token);
+                localStorage.setItem("lvl", res.lvl);
+                if (res.lvl == 3) {
+                    window.location.replace("/qc");
+                } else {
+                    window.location.replace("/inicio");
+                }
             } else {
                 $.notify(res.message);
             }
@@ -1433,7 +1442,7 @@ function init_daterangepicker() {
                 let options = {
                     method: 'post',
                     body: JSON.stringify(data),
-                    headers: { "Content-Type": "application/json" }
+                    headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
                 }
 
                 let pet = await fetch(url, options);
@@ -1458,4 +1467,22 @@ function init_daterangepicker() {
                 $("#reportrange").data("daterangepicker").remove()
             })
     }
+}
+function setCookie(cname, cvalue) {
+    document.cookie = cname + "=" + cvalue + ";";
+}
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }

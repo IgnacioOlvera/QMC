@@ -3,7 +3,7 @@ var express = require('express');
 var api = express.Router();
 var md_auth = require('../middlewares/autenticacion.js');
 var md_nivel = require('../middlewares/nivel.js');
-api.get('/parte/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.get('/parte/:id?', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id) {//Si existe ID en el URL selecciona parte específica y su proveedor
         var no_parte = req.params.id;
         con.query(`select b.*, (select nombre from clientes where id_cliente=id_proveedor) from partes b where no_parte='${no_parte}'`, function (err, rows) {
@@ -19,7 +19,7 @@ api.get('/parte/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (re
     }
 });
 
-api.post('/parte/:b', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.post('/parte/:b', md_nivel.ensureLevel2, function (req, res) {
     let parte = req.body;
     let b = req.params.b;//Bandera para decidir si es actualización o inserción
     if (parte != null && (b == 0 || b == 1)) {
@@ -57,7 +57,7 @@ api.post('/parte/:b', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req
     }
 });
 //Eliminar parte
-api.delete('/parte/:id', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.delete('/parte/:id', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
         con.query(`update partes set estado=${1} where no_parte='${id}'`, function (err) {
@@ -69,7 +69,7 @@ api.delete('/parte/:id', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (
     }
 });
 //Seleccionar existencia de parte por unidad, caja, y tarima
-api.get('/existencia/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.get('/existencia/:id?', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id) {
         let id_parte = req.params.id
         let sql = `select no_parte,descripcion, existencia, floor(existencia/cant_x_caja) cajas, floor((existencia/cant_x_caja)/cant_x_pallet) tarimas from partes where id_parte=${id_parte};`;
@@ -86,7 +86,7 @@ api.get('/existencia/:id?', [md_auth.ensureAuth, md_nivel.ensureLevel2], functio
     }
 });
 
-api.post('/qc', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.post('/qc', md_nivel.ensureLevel2, function (req, res) {
     let data = req.body;
     let cont = 0;
     for (i in data.partes) {
@@ -105,7 +105,7 @@ api.post('/qc', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res)
     }
 });
 
-api.post('/svc', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.post('/svc', md_nivel.ensureLevel2, function (req, res) {
     let data = req.body;
     let cont = 0;
     for (i in data.partes) {
@@ -125,7 +125,7 @@ api.post('/svc', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res
 });
 
 //Selecciona todos los costales
-api.get('/costales', [md_auth.ensureAuth, md_nivel.ensureLevel2], function (req, res) {
+api.get('/costales', md_nivel.ensureLevel2, function (req, res) {
     let sql = `select * from costales order by fecha`;
     con.query(sql, function (err, rows) {
         (err) ? res.send({ message: 'Ocurrió un error', status: "500" }) : res.send(rows);

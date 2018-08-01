@@ -18,7 +18,7 @@ api.post('/log', function (req, res) {
                     let usuario = rows[0];
                     bcrypt.compare(password, usuario.pass, function (err, check) {
                         if (check == true) {
-                            res.send({ token: jwt.createToken(usuario), status: 200 });
+                            res.send({ token: jwt.createToken(usuario), status: 200, lvl: usuario.nivel });
                         } else {
                             res.send({ message: 'Correo y/o Contraseña Incorrrectos', status: 500 });
                         }
@@ -31,7 +31,7 @@ api.post('/log', function (req, res) {
     });
 });
 
-api.get('/hash/:pass', [md_auth.ensureAuth, md_nivel.ensureLevel1], function (req, res) {
+api.get('/hash/:pass', md_nivel.ensureLevel1, function (req, res) {
     var salt = bcrypt.genSaltSync(10);
     let pass = bcrypt.hashSync(req.params.pass, salt);
     res.send(pass);
