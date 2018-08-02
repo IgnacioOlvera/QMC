@@ -1079,7 +1079,7 @@ async function initProyectos() {
             let options = {
                 method: 'post',
                 body: JSON.stringify(form),
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
             }
 
             let url = "/proyectos/1"
@@ -1294,7 +1294,7 @@ function initLogin() {
             let options = {
                 method: 'post',
                 body: JSON.stringify(data),
-                headers: { "Content-Type": "application/json"}
+                headers: { "Content-Type": "application/json" }
             }
             let pet = await fetch('/log', options);
             let res = await pet.json();
@@ -1313,6 +1313,76 @@ function initLogin() {
             $.notify('Falta Ingresar Usuario y/o Contraseña');
         }
     });
+
+}
+async function initUsuarios() {
+    let tabla = $('#usuarios').DataTable();
+    let usuario = {};
+    let pet = await fetch('/users', { headers: { authorization: getCookie("authorization") } });
+    let res = await pet.json();
+    let modales = "";
+    for (i in res) {
+        let u = res[i];
+        tabla.row.add([u.nombre, u.correo, u.nivel, `<button data-target="${u.id_usuario}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]);
+    }
+    tabla.draw();
+    $('#registroUsuario').on('click', async function () {
+        if (usuario.nombre != "" && usuario.correo != "" && usuario.contraseña != "" && usuario.nivel) {
+            usuario.nombre = $('#in_nombre').val();
+            usuario.correo = $('#usuario').text();
+            usuario.contraseña = $('#contraseña').text();
+            let options = {
+                method: 'post',
+                body: JSON.stringify(usuario),
+                headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
+            }
+            let p = await fetch('/NuevoUsuario', options);
+            let a = await p.json();
+            if (a.status == 200) {
+                $.notify(a.message, "success");
+                tabla.row.add([usuario.nombre, usuario.correo, usuario.nivel, `<button data-target="${usuario.id_usuario}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw();
+                $('#AgregarUsuarioModal').modal('toggle');
+            } else {
+                $.notify(a.message);
+            }
+        } else {
+            $.notify("Falta Proporcionar Datos Obligatorio y/o Válidos");
+        }
+    });
+
+    $('#in_nombre').on('keyup', function () {
+        let nombre = $(this).val().split(" ");
+        if (nombre.length > 1) {
+            let ingreso = `${nombre[0].substr(0, 1)}${nombre[1]}`.toLowerCase();
+            $('#usuario').text(ingreso);
+            $('#contraseña').text(ingreso + new Date().getDate() + Math.floor((Math.random() * 100) + 1));
+        }
+        if (nombre.length >= 3) {
+            let ingreso = `${nombre[0].substr(0, 1)}${nombre[1]}${nombre[2]}`.toLowerCase();
+            $('#usuario').text(ingreso);
+            $('#contraseña').text(ingreso + new Date().getDate() + Math.floor((Math.random() * 100) + 1));
+        }
+        if (nombre == "") {
+            $('#usuario').text("");
+            $('#contraseña').text("");
+        }
+    });
+
+    $('#nivel .nivel').on('click', function () {
+        usuario.nivel = $(this).data("value");
+    });
+
+    $('.eliminar').on('click', async function () {
+        let pet = await fetch('/usuario/'+$(this).data("target"), { method: 'delete', header: { authorization: getCookie("authorization") } });
+        let res = await pet.json();
+        if(res.status==200){
+            $.notify(res.message,"success");
+            tabla.row($(this).parents('tr')).remove().draw();
+        }else{
+            $.notify('Ocurrió un Error')
+        }
+    });
+
 
 }
 (function ($) {//Función para transformar las formas en json

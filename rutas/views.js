@@ -40,5 +40,7 @@ api.get('/qc', md_auth.ensureAuth, function (req, res) {
 api.get('/svc', md_auth.ensureAuth, function (req, res) {
     res.sendFile(path.join(__dirname, '../client/production/svc.html'));
 });
-
+api.get('/usuarios', md_auth.ensureAuth, function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/production/usuarios.html'));
+});
 module.exports = api;

@@ -3,7 +3,6 @@ var express = require('express');
 var api = express.Router();
 var con = require('../conexion.js');
 var jwt = require('../services/jwt');
-var md_auth = require('../middlewares/autenticacion.js');
 var md_nivel = require('../middlewares/nivel.js');
 api.post('/log', function (req, res) {
     var params = req.body;
@@ -31,17 +30,42 @@ api.post('/log', function (req, res) {
     });
 });
 
+api.get('/users', md_nivel.ensureLevel1, function (req, res) {
+    con.query('select * from usuarios', function (err, rows) {
+        if (err) throw err
+        else
+            res.send(rows);
+    });
+});
+
+api.post('/NuevoUsuario', md_nivel.ensureLevel1, function (req, res) {
+    let usuario = req.body;
+    let salt = bcrypt.genSaltSync(10);
+    let pass = bcrypt.hashSync(usuario.contraseña, salt);
+    con.query(`insert into usuarios values(null,'${usuario.nombre}','${pass}','${usuario.correo}',${usuario.nivel})`, function (err) {
+        (err) ? res.send({ message: 'Ocurrió un error SQL', status: 500 }) : res.send({ message: 'Usuario Registrado Correctamente', status: 200 });
+    });
+});
+
+api.delete('/usuario/:id', function (req, res) {
+    let id = req.params.id;
+    con.query('delete from usuarios where id_usuario=' + id, function (err) {
+        (err) ? console.log(err) : res.send({ message: 'Usuario Eliminado Correctamente', status: 200 });
+    });
+});
+
+
 api.get('/hash/:pass', md_nivel.ensureLevel1, function (req, res) {
     var salt = bcrypt.genSaltSync(10);
     let pass = bcrypt.hashSync(req.params.pass, salt);
     res.send(pass);
-    // bcrypt.compare('#Mission03', req.body.pass, function (err, check) {
-    //     if (check) {
-    //         res.send("ok");
-    //     } else {
-    //         
-    //     }
-    // });
+    bcrypt.compare('#Mission03', req.body.pass, function (err, check) {
+        if (check) {
+            res.send("ok");
+        } else {
+
+        }
+    });
 });
 
 module.exports = api;
