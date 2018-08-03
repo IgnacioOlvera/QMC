@@ -1332,7 +1332,11 @@ function initLogin() {
             $.notify('Falta Ingresar Usuario y/o Contraseña');
         }
     });
-
+    $(document).on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            $('#login').trigger("click");
+        }
+    });
 }
 async function initUsuarios() {
     let tabla = $('#usuarios').DataTable();

@@ -24,7 +24,7 @@ api.post('/log', function (req, res) {
                     });
                 }
             } catch (e) {
-                res.send({ message: 'Correo y/o Contraseña Incorrrectosss', status: 500 });
+                res.send({ message: 'Ocurrió un Error', status: 500 });
             }
         }
     });
