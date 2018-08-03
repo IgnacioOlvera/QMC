@@ -791,9 +791,9 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
         }
     });
     wb.write(path.join(__dirname, `../docs/Bill Of Landing ${info.cliente[1].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
-        if (err) throw err
+        if (err) res.send({ message: 'Ocurrió un Error', status: 500 });
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Archivo creado', status: 200 });
         }
     });
 });
@@ -1246,9 +1246,9 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
     //Escribir Documento
 
     wb.write(path.join(__dirname, `../docs/Order Sheet ${info.cliente[1].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
-        if (err) throw err
+        if (err) res.send({ message: 'Ocurrió un Error', status: 500 });
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Archivo creado', status: 200 });
         }
     });
 
@@ -1641,9 +1641,9 @@ api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
     ws.cell(72, 17, 72, 19, true).string([{ name: 'Verdana', size: 9 }, "Trucking Company"]);
 
     wb.write(path.join(__dirname, `../docs/Packing List ${info.cliente[1].nombre} ${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}.xlsx`), function (err) {
-        if (err) throw err
+        if (err) res.send({ message: 'Ocurrió un Error', status: 500 });
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Archivo creado', status: 200 });
         }
     });
 });
@@ -1991,9 +1991,9 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
 
     //Fin de Pie de Docuemtno
     wb.write(path.join(__dirname, `../docs/Receiving ${info.cliente.nombre} Week ${info.semana}.xlsx`), function (err) {
-        if (err) throw err
+        if (err) res.send({ message: 'Ocurrió un Error', status: 500 });
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Archivo creado', status: 200 });
         }
     });
 });
@@ -2239,7 +2239,7 @@ api.get('/ReleaseReceiving', md_nivel.ensureLevel2, async function (req, res) {
     });
 });
 
-api.get('/InventoryControl', md_nivel.ensureLevel2, async function (req, res) {
+api.get('/InventoryControl/:proyecto', md_nivel.ensureLevel2, async function (req, res) {
     let meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Agu', 'Sep', 'Oct', 'Nov', 'Dec'];
     let fechaCreacion = new Date();
     let wb = new xl.Workbook({
@@ -2252,7 +2252,7 @@ api.get('/InventoryControl', md_nivel.ensureLevel2, async function (req, res) {
     let info = null;
     for (let i = 1; i <= fechaCreacion.getMonth() + 1; i++) {
         info = await new Promise(function (resolve, reject) {
-            con.query(`select p.no_parte, date_format(fecha,'%d/%m/%Y') fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet) pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                                  rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                                  rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                                  shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                                  shp_qty, cant_posterior end_case, p.existencia end_qty,cq_ant,cq_post,svc_ant,svc_post from movimientos_almacenes ma inner join partes p on ma.no_parte = p.no_parte where p.id_proveedor != 4 and month(fecha)=${i} order by ma.no_parte;`, function (err, rows) {
+            con.query(`select p.no_parte, date_format(fecha,'%d/%m/%Y') fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet) pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                                  rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                                  rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                                  shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                                  shp_qty, cant_posterior end_case, p.existencia end_qty,cq_ant,cq_post,svc_ant,svc_post from movimientos_almacenes ma inner join partes p on ma.no_parte = p.no_parte where p.id_proveedor != 4 and month(fecha)=${i} and p.id_proyecto=(select id_proyecto from proyectos where id_proyecto=${req.params.proyecto});  order by ma.no_parte;`, function (err, rows) {
                 if (err) return reject(err);
                 else resolve(rows);
             });
@@ -2642,244 +2642,10 @@ api.get('/InventoryControl', md_nivel.ensureLevel2, async function (req, res) {
             }
         }
     }
-
-    // for (let i = 0; i < info.length; i++) {
-    //     if (mes != meses[fecha.getMonth()]) {
-    //         ws = wb.addWorksheet(`${mes}`, {
-    //             pageSetup: {
-    //                 paperSize: 'LETTER_PAPER',
-    //                 usePrinterDefaults: true,
-    //                 fitToWidth: 1,
-    //                 orientation: 'landscape'
-    //             },
-    //             sheetView: {
-    //                 showGridLines: false
-    //             },
-    //             margins: {
-    //                 bottom: 0,
-    //                 top: 0
-    //             },
-    //             headerFooter: {
-    //                 scaleWithDoc: true
-    //             }
-    //         });
-    //         ws.column(1).setWidth(2);
-    //         ws.addImage({
-    //             path: path.join(__dirname, '../client/production/images/gensenLogo.png'),
-    //             type: 'picture',
-    //             position: {
-    //                 type: 'oneCellAnchor',
-    //                 from: {
-    //                     col: 2,
-    //                     colOff: '0.2in',
-    //                     row: 1,
-    //                     rowOff: '0.05in'
-    //                 },
-    //                 to: {
-    //                     col: 4,
-    //                     colOff: 0,
-    //                     row: 6,
-    //                     rowOff: 0
-    //                 }
-    //             }
-    //         });
-    //         ws.cell(5, 2, 5, 2).string('NINGBO ZHONGJUN UEHARA');
-    //         ws.cell(6, 2, 6, 2).string('AUTOMOBILE PARTS CO.,LTD');
-    //         ws.cell(7, 2, 7, 2).string('TIANYUAN, CIXI,');
-    //         ws.cell(8, 2, 8, 2).string('ZHEJIANG, PRC');
-    //         ws.cell(9, 2, 9, 2).string('P. C. 315325');
-    //         ws.cell(10, 2, 10, 2).string('AS OF');
-    //         ws.cell(10, 3, 10, 3).string(`${fechaCreacion.getDate()}/${fechaCreacion.getMonth() + 1}/${fechaCreacion.getFullYear()}`);
-    //     }
-    //     if (bandera) {
-    //         ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-OK`).style({
-    //             font: { bold: true, underline: true }
-    //         });
-    //         inicio++;
-    //         ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
-    //         ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
-    //         ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
-    //         ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
-    //         ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
-    //         ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
-    //         ws.cell(inicio, 9, inicio, 9).string('END CASE');
-    //         ws.cell(inicio, 10, inicio, 10).string('END QTY');
-    //         ws.cell(inicio, 11, inicio, 11).string('REMARKS');
-    //         inicio++;
-    //         comienzo = inicio;
-    //         ws.cell(inicio, 2, inicio, 2).string('BBF');
-    //         ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
-    //         ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
-    //         ws.cell(inicio, 5, inicio, 5).number(data.rcv_case);
-    //         ws.cell(inicio, 6, inicio, 6).number(data.rcv_qty);
-    //         ws.cell(inicio, 7, inicio, 7).number(data.shp_case);
-    //         ws.cell(inicio, 8, inicio, 8).number(data.shp_qty);
-    //         ws.cell(inicio, 9, inicio, 9).number(data.end_case);
-    //         ws.cell(inicio, 10, inicio, 10).number(data.end_qty);
-    //         inicio++;
-    //         data = info[i + 1];
-    //         bandera = !bandera;
-    //     }
-    //     try {
-    //         if (data.no_parte == info[i].no_parte) {
-    //             ws.cell(inicio, 2, inicio, 2).string(data.fecha);
-    //             ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
-    //             ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
-    //             ws.cell(inicio, 5, inicio, 5).number(data.rcv_case);
-    //             ws.cell(inicio, 6, inicio, 6).number(data.rcv_qty);
-    //             ws.cell(inicio, 7, inicio, 7).number(data.shp_case);
-    //             ws.cell(inicio, 8, inicio, 8).number(data.shp_qty);
-    //             ws.cell(inicio, 9, inicio, 9).number(data.end_case);
-    //             ws.cell(inicio, 10, inicio, 10).number(data.end_qty);
-    //             //data = info[i];
-    //             inicio++;
-    //         } else {
-    //             ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
-    //                 font: { bold: true }
-    //             });
-    //             inicio++
-    //             // ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-QC`).style({
-    //             //     font: { bold: true, underline: true }
-    //             // });
-    //             // inicio++;
-    //             // ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
-    //             // ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
-    //             // ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
-    //             // ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
-    //             // ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
-    //             // ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
-    //             // ws.cell(inicio, 9, inicio, 9).string('END CASE');
-    //             // ws.cell(inicio, 10, inicio, 10).string('END QTY');
-    //             // ws.cell(inicio, 11, inicio, 11).string('REMARKS');
-    //             // inicio++;
-    //             // comienzo = inicio;
-    //             // ws.cell(inicio, 2, inicio, 2).string('BBF');
-    //             // ws.cell(inicio, 3, inicio, 3).number(data.cq_ant);
-    //             // ws.cell(inicio, 4, inicio, 4).number(data.cq_post);
-    //             // ws.cell(inicio, 5, inicio, 5).number(0);
-    //             // ws.cell(inicio, 6, inicio, 6).number(0);
-    //             // ws.cell(inicio, 7, inicio, 7).number(0);
-    //             // ws.cell(inicio, 8, inicio, 8).number(0);
-    //             // ws.cell(inicio, 9, inicio, 9).number(data.cq_ant);
-    //             // ws.cell(inicio, 10, inicio, 10).number(data.cq_post);
-    //             // inicio++;
-    //             // ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // inicio++;
-    //             // ws.cell(inicio, 2, inicio, 2).string(`${data.no_parte}-SVC`).style({
-    //             //     font: { bold: true, underline: true }
-    //             // });
-    //             // inicio++;
-    //             // ws.cell(inicio, 3, inicio, 3).string('PRV CASE');
-    //             // ws.cell(inicio, 4, inicio, 4).string('PRV QTY');
-    //             // ws.cell(inicio, 5, inicio, 5).string('RCV CASE');
-    //             // ws.cell(inicio, 6, inicio, 6).string('RCV QTY');
-    //             // ws.cell(inicio, 7, inicio, 7).string('SHP CASE');
-    //             // ws.cell(inicio, 8, inicio, 8).string('SHP QTY');
-    //             // ws.cell(inicio, 9, inicio, 9).string('END CASE');
-    //             // ws.cell(inicio, 10, inicio, 10).string('END QTY');
-    //             // ws.cell(inicio, 11, inicio, 11).string('REMARKS');
-    //             // inicio++;
-    //             // comienzo = inicio;
-    //             // ws.cell(inicio, 2, inicio, 2).string('BBF');
-    //             // ws.cell(inicio, 3, inicio, 3).number(data.svc_ant);
-    //             // ws.cell(inicio, 4, inicio, 4).number(data.svc_post);
-    //             // ws.cell(inicio, 5, inicio, 5).number(0);
-    //             // ws.cell(inicio, 6, inicio, 6).number(0);
-    //             // ws.cell(inicio, 7, inicio, 7).number(0);
-    //             // ws.cell(inicio, 8, inicio, 8).number(0);
-    //             // ws.cell(inicio, 9, inicio, 9).number(data.svc_ant);
-    //             // ws.cell(inicio, 10, inicio, 10).number(data.svc_post);
-    //             // inicio++;
-    //             // ws.cell(inicio, 2, inicio, 2).string('**TOTAL').style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 3, inicio, 3).formula(`=SUM(C${comienzo}:C${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 4, inicio, 4).formula(`=SUM(D${comienzo}:D${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 5, inicio, 5).formula(`=SUM(E${comienzo}:E${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 6, inicio, 6).formula(`=SUM(F${comienzo}:F${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 7, inicio, 7).formula(`=SUM(G${comienzo}:G${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 8, inicio, 8).formula(`=SUM(H${comienzo}:H${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 9, inicio, 9).formula(`=SUM(I${comienzo}:I${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // ws.cell(inicio, 10, inicio, 10).formula(`=SUM(J${comienzo}:J${inicio - 1})`).style({
-    //             //     font: { bold: true }
-    //             // });
-    //             // inicio++;
-    //             //data = info[i+1];
-    //             bandera = !bandera;
-    //         }
-    //     } catch (e) {
-    //         console.log('vacio');
-    //     }
-
-    // }
     wb.write(path.join(__dirname, `../docs/Inventory.xlsx`), function (err) {
-        if (err) throw err
+        if (err) res.send({ message: 'Ocurrió un Error', status: 500 })
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Archivo creado', status: 200 });
         }
     });
 

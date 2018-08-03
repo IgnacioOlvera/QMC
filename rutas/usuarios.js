@@ -31,10 +31,9 @@ api.post('/log', function (req, res) {
 });
 
 api.get('/users', md_nivel.ensureLevel1, function (req, res) {
-    con.query('select * from usuarios', function (err, rows) {
+    con.query('select nombre, nivel, correo, id_usuario from usuarios', function (err, rows) {
         if (err) throw err
-        else
-            res.send(rows);
+        else res.send(rows);
     });
 });
 
@@ -53,7 +52,6 @@ api.delete('/usuario/:id', function (req, res) {
         (err) ? console.log(err) : res.send({ message: 'Usuario Eliminado Correctamente', status: 200 });
     });
 });
-
 
 api.get('/hash/:pass', md_nivel.ensureLevel1, function (req, res) {
     var salt = bcrypt.genSaltSync(10);

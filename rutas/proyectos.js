@@ -10,7 +10,7 @@ api.get('/proyectos', md_nivel.ensureLevel1, function (req, res) {
     });
 });
 
-api.post('/proyectos/:id',md_nivel.ensureLevel1, function (req, res) {
+api.get('/proyectos/:id',md_nivel.ensureLevel1, function (req, res) {
     if (req.body != null && (req.params.id == 0 || req.params.id == 1)) {
         let proyecto = req.body;
         let option = req.params.id;
@@ -18,13 +18,13 @@ api.post('/proyectos/:id',md_nivel.ensureLevel1, function (req, res) {
             //Insertar
             let sql = `insert into proyectos values(null,'${proyecto.proyecto}',${proyecto.propietario},1)`;
             con.query(sql, function (err) {
-                if (err) throw err
+                if (err) res.send({ message: 'Ocurrió un Error SQL', status: 500 })
                 else res.send({ message: 'Proyecto Registrado Correctamente', status: 200 });
             });
         } else if (option == 0) {
             //Actualizar
             con.query(`update proyectos set nombre='${proyecto.proyecto}', id_cliente=${proyecto.propietario} where id_proyecto=${proyecto.id_proyecto}`, function (err) {
-                if (err) throw err
+                if (err) res.send({ message: 'Ocurrió un Error SQL', status: 500 })
                 else res.send({ message: 'Proyecto Actualizado Correctamente', status: 200 })
             });
         }
