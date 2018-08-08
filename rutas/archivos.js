@@ -2002,7 +2002,7 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
     });
 });
 
-api.get('/ReleaseReceiving', md_nivel.ensureLevel2, async function (req, res) {
+api.get('/ReleaseReceiving/:proyecto/:nombre', md_nivel.ensureLevel2, async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
         con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre,nota invoice, id_candado padlock, id_contendor conteiner from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
@@ -2118,18 +2118,18 @@ api.get('/ReleaseReceiving', md_nivel.ensureLevel2, async function (req, res) {
 
     }
 
-    wb.write(path.join(__dirname, `../docs/Production releases for the GMD2JC.LC and T250 parts ${fecha.getFullYear} RCV.xlsx`), function (err) {
+    wb.write(path.join(__dirname, `../docs/Production releases for the ${req.params.nombre} ${fecha.getFullYear()} RCV.xlsx`), function (err) {
         if (err) throw err
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Production Releases Receiving Creado', status: '200' });
         }
     });
 });
 
-api.get('/ReleaseReceiving', md_nivel.ensureLevel2, async function (req, res) {
+api.get('/ReleaseShipments/:proyecto/:nombre', md_nivel.ensureLevel2, async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
-        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
+        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select fecha, m.no_parte, cant_parte, id_destino from movimientos_almacenes m inner join partes p on m.no_parte = p.no_parte where id_destino is not null and p.id_proyecto=${req.params.proyecto} and m.id_proveedor != 4 and year(fecha) = year(current_date())) ma inner join clientes c on ma.id_destino = c.id_cliente order by ma.fecha;`, function (err, rows) {
             if (err) return reject(err);
             else resolve(rows);
         });
@@ -2235,10 +2235,10 @@ api.get('/ReleaseReceiving', md_nivel.ensureLevel2, async function (req, res) {
         }
     }
 
-    wb.write(path.join(__dirname, `../docs/Production releases for the GMD2JC.LC and T250 parts ${fecha.getFullYear} RCV.xlsx`), function (err) {
+    wb.write(path.join(__dirname, `../docs/Production releases for the ${req.params.nombre} ${fecha.getFullYear()} SHP.xlsx`), function (err) {
         if (err) throw err
         else {
-            res.send({ message: 'Archivo creado', status: '200' });
+            res.send({ message: 'Production Releases Shipment Creado', status: '200' });
         }
     });
 });
