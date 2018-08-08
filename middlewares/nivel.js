@@ -12,6 +12,7 @@ function ensureLevel1(req, res, next) {
     } catch (ex) {
         return res.send("<h1>No tiene autorización para acceder a estos métodos</h1>");
     }
+    req.headers.authorization = payload;
     next();
 }
 
@@ -26,6 +27,7 @@ function ensureLevel2(req, res, next) {
     } catch (ex) {
         return res.send("<h1>No tiene autorización para acceder a estos métodos</h1>");
     }
+    req.headers.authorization = payload;
     next();
 }
 

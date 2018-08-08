@@ -8,7 +8,6 @@ api.post('/log', function (req, res) {
     var params = req.body;
     var email = params.correo;
     var password = params.pass;
-
     con.query(`select * from usuarios where correo='${email}'`, function (err, rows) {
         if (err) throw err
         else {
@@ -16,12 +15,14 @@ api.post('/log', function (req, res) {
                 if (rows.length > 0) {
                     let usuario = rows[0];
                     bcrypt.compare(password, usuario.pass, function (err, check) {
-                        if (check == true) {
+                        if (check) {
                             res.send({ token: jwt.createToken(usuario), status: 200, lvl: usuario.nivel });
-                        } else {
+                        } else if (!check || err) {
                             res.send({ message: 'Correo y/o Contraseña Incorrrectos', status: 500 });
                         }
                     });
+                } else {
+                    res.send({ message: 'El usuario no existe.', status: 500 });
                 }
             } catch (e) {
                 res.send({ message: 'Ocurrió un Error', status: 500 });

@@ -6,7 +6,7 @@ var md_nivel = require('../middlewares/nivel.js');
 api.get('/parte/:id?', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id) {//Si existe ID en el URL selecciona parte específica y su proveedor
         var no_parte = req.params.id;
-        con.query(`select b.*, (select nombre from clientes where id_cliente=id_proveedor) from partes b where no_parte='${no_parte}'`, function (err, rows) {
+        con.query(`select *, (select nombre from clientes where id_cliente=b.id_proveedor) proveedor from partes b where no_parte='${no_parte}'`, function (err, rows) {
             if (err) throw err
             else res.send(rows);
 

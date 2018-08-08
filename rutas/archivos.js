@@ -499,7 +499,7 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
             let cant = parte.cant;
             let tot_cajas = Math.floor(cant / cant_caja);
             let tot_pallets = Math.floor(tot_cajas / cant_pallet);
-            let tot_peso = parte.peso * cant;
+            let tot_peso = (parte.peso * cant) / 1000;
             ws.cell(inicio, 1, inicio + 2, 2, true).string(`${tot_pallets} Plt`).style(estiloLista);
             ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
             ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.no_parte}-${parte.descripcion}\n${tot_cajas}@${cant_caja}`).style(estiloLista);
@@ -800,6 +800,7 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
 
 api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
     let info = req.body;
+    let usuario = req.headers.authorization;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
     fecha.toLocaleDateString('es-MX', options);
@@ -810,7 +811,6 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
     let unDia = 1000 * 60 * 60 * 24;
     let dia = Math.ceil(dif / unDia) - 1;
     let wb = new xl.Workbook();
-
     //Estilos
     let styleLista = {
         font: {
@@ -1134,10 +1134,10 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
     ws.cell(10, 19, 10, 23, true).string([{ size: 11 }, "9:00"]).style(styleDetalle);
 
     ws.cell(11, 16, 11, 18, true).string([{ size: 7.5 }, "BATCH PREPARED"]).style(styleDetalle);
-    ws.cell(11, 19, 11, 23, true).string([{ size: 11 }, "Luis Macías"]).style(styleDetalle);
+    ws.cell(11, 19, 11, 23, true).string([{ size: 11 }, usuario.nombre]).style(styleDetalle);
 
     ws.cell(12, 16, 12, 18, true).string([{ size: 7.5 }, "BATCH RELEASER"]).style(styleDetalle);
-    ws.cell(12, 19, 12, 23, true).string([{ size: 11 }, "Luis Macías"]).style(styleDetalle);
+    ws.cell(12, 19, 12, 23, true).string([{ size: 11 }, usuario.nombre]).style(styleDetalle);
 
     ws.cell(13, 16, 13, 18, true).string([{ size: 7.5 }, "LOT  CHARGE"]).style(styleDetalle);
     ws.cell(13, 19, 13, 23, true).string([{ size: 11 }, "Leader Logistic"]).style(styleDetalle);
@@ -1178,12 +1178,13 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
             let cant = parte.cant;
             let tot_cajas = Math.floor(cant / cant_caja);
             let tot_pallets = Math.floor(tot_cajas / cant_pallet);
+            let precio = parte.precio * cant;
             ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
             ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
-            ws.cell(inicio, 7, inicio + 1, 7, true).string(cant).style(styleLista);
-            ws.cell(inicio, 8, inicio + 1, 8, true).string(`${tot_cajas}`).style(styleLista);
-            ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant_caja}`).style(styleLista);
-            ws.cell(inicio, 11, inicio + 1, 14, true).string("0.000").style(styleLista);
+            ws.cell(inicio, 7, inicio + 1, 7, true).string(`${tot_cajas}`).style(styleLista);
+            ws.cell(inicio, 8, inicio + 1, 8, true).string(`${cant_caja}`).style(styleLista);
+            ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant}`).style(styleLista);
+            ws.cell(inicio, 11, inicio + 1, 14, true).string(`${precio}`).style(styleLista);
             ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
             ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
             ws.cell(inicio, 19, inicio + 1, 20, true).style(styleLista);
@@ -1258,6 +1259,7 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
 
 api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
     let info = req.body;
+    let usuario = req.headers.authorization;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
     fecha.toLocaleDateString('es-MX', options);
@@ -1511,7 +1513,7 @@ api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
     ws.cell(12, 18, 12, 21, true).string([{ size: 12 }, `${mes} ${fecha.getDate()},${fecha.getFullYear()}`]).style(bordeado);
 
     ws.cell(13, 15, 13, 17, true).string([{ size: 12 }, "BATCH RELEASER"]).style(bordeado);
-    ws.cell(13, 18, 13, 21, true).string([{ size: 12 }, "LUIS MACIAS"]).style(bordeado);
+    ws.cell(13, 18, 13, 21, true).string([{ size: 12 }, usuario.nombre]).style(bordeado);
 
     ws.cell(15, 15, 15, 17, true).string([{ size: 12 }, "B/L NO."]).style(bordeado);
     ws.cell(15, 18, 15, 21, true).string([{ size: 12, bold: true }, `N${fecha.getFullYear().toString().substr(2, 2)}${dia}`]).style(bordeado);
@@ -1651,6 +1653,7 @@ api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
 //Recibos
 api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
     let info = req.body;
+    let usuario = req.headers.authorization;
     let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     let fecha = new Date(`${info.fecha.split('\/')[2]}`, `${info.fecha.split('\/')[1] - 1}`, `${info.fecha.split('\/')[0]}`)
     fecha.toLocaleDateString('es-MX', options);
@@ -1891,8 +1894,8 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
     ws.cell(7, 16, 7, 21, true).string(`Week ${info.semana}`).style(bordeado);
     ws.cell(8, 16, 8, 21, true).string(`${mes} ${fecha.getDate()},${fecha.getFullYear()}`).style(bordeado);
     ws.cell(9, 16, 9, 21, true).string(`${tiempo.getHours()}:${tiempo.getMinutes()}`).style(bordeado);
-    ws.cell(10, 16, 10, 21, true).string('LUIS MACIAS').style(bordeado);
-    ws.cell(11, 16, 11, 21, true).string('LUIS MACIAS').style(bordeado);
+    ws.cell(10, 16, 10, 21, true).string(usuario.nombre).style(bordeado);
+    ws.cell(11, 16, 11, 21, true).string(usuario.nombre).style(bordeado);
     ws.cell(12, 16, 12, 21, true).string(info.operario).style(bordeado);
     //Fin Metadatos
 
@@ -1920,13 +1923,14 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
         let cant_pallet = parte.cant_x_pallet || null;
         let cant = parte.cant;
         let tot_cajas = Math.floor(cant / cant_caja) || parte.cant;
+        let precio = parte.cant * parte.precio;
         let tot_pallets = (cant_pallet != null) ? Math.floor(tot_cajas / cant_pallet) : parte.remarks;
         ws.cell(inicio, 1, inicio + 1, 1, true).string(`0${parseInt(index) + 1}`).style(styleLista);
         ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
         ws.cell(inicio, 7, inicio + 1, 8, true).string(`${cant}`).style(styleLista);
         ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant_caja}`).style(styleLista);
         ws.cell(inicio, 11, inicio + 1, 12, true).string(`${tot_cajas}`).style(styleLista);
-        ws.cell(inicio, 13, inicio + 1, 14, true).style(styleLista);
+        ws.cell(inicio, 13, inicio + 1, 14, true).string(`${precio}`).style(styleLista);
         ws.cell(inicio, 15, inicio + 1, 16, true).style(styleLista);
         ws.cell(inicio, 17, inicio + 1, 18, true).string(`2623 ${fecha.getFullYear().toString().substr(2, 2)}${dia}`).style(styleLista);
         ws.cell(inicio, 19, inicio + 1, 19, true).style(styleLista);
@@ -2252,7 +2256,7 @@ api.get('/InventoryControl/:proyecto', md_nivel.ensureLevel2, async function (re
     let info = null;
     for (let i = 1; i <= fechaCreacion.getMonth() + 1; i++) {
         info = await new Promise(function (resolve, reject) {
-            con.query(`select p.no_parte, date_format(fecha,'%d/%m/%Y') fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet) pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                                  rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                                  rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                                  shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                                  shp_qty, cant_posterior end_case, p.existencia end_qty,cq_ant,cq_post,svc_ant,svc_post from movimientos_almacenes ma inner join partes p on ma.no_parte = p.no_parte where p.id_proveedor != 4 and month(fecha)=${i} and p.id_proyecto=(select id_proyecto from proyectos where id_proyecto=${req.params.proyecto});  order by ma.no_parte;`, function (err, rows) {
+            con.query(`select p.no_parte, date_format(fecha, '%d/%m/%Y')                        fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet)  pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                          rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                          rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                          shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                          shp_qty, floor(cant_posterior / p.cant_x_caja / cant_x_pallet) end_case, ma.cant_posterior                                     end_qty, cq_ant, cq_post, svc_ant, svc_post from partes p left join movimientos_almacenes ma on ma.no_parte = p.no_parte where p.id_proveedor != 4 and month(fecha) = ${i} and p.id_proyecto = ${req.params.proyecto}          order by ma.no_parte, ma.id_movimiento;`, function (err, rows) {
                 if (err) return reject(err);
                 else resolve(rows);
             });
@@ -2260,7 +2264,7 @@ api.get('/InventoryControl/:proyecto', md_nivel.ensureLevel2, async function (re
 
         //Fin de Pie de Documento
 
-        if (info.length > 1) {
+        if (info.length >= 1) {
             let inicio = 11;
             let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
@@ -2350,7 +2354,6 @@ api.get('/InventoryControl/:proyecto', md_nivel.ensureLevel2, async function (re
                         bandera = !bandera;
                     }
                     if (data.no_parte == info[index - 1].no_parte) {
-                        console.log(data);
                         ws.cell(inicio, 2, inicio, 2).string(data.fecha);
                         ws.cell(inicio, 3, inicio, 3).number(data.pvr_case);
                         ws.cell(inicio, 4, inicio, 4).number(data.cant_anterior);
@@ -2642,7 +2645,7 @@ api.get('/InventoryControl/:proyecto', md_nivel.ensureLevel2, async function (re
             }
         }
     }
-    wb.write(path.join(__dirname, `../docs/Inventory.xlsx`), function (err) {
+    wb.write(path.join(__dirname, `../docs/Inventory Control ${info[0].proyecto}.xlsx`), function (err) {
         if (err) res.send({ message: 'Ocurrió un Error', status: 500 })
         else {
             res.send({ message: 'Archivo creado', status: 200 });
