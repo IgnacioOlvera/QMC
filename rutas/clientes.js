@@ -53,7 +53,7 @@ api.post('/cliente/:b', md_nivel.ensureLevel2, function (req, res) {
         let id_cliente = cliente.id_cliente,
             nombre = cliente.nombre || null,
             direccion = cliente.direccion || null,
-            rfc = (cliente.rfc == "") ? null : `'${cliente.rfc}'`,
+            rfc = (cliente.rfc.trim() == "") ? null : `'${cliente.rfc}'`,
             estado = cliente.estado || null,
             nat = cliente.nat,
             rsocial = cliente.rsocial;
