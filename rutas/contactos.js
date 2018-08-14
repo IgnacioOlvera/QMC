@@ -7,19 +7,27 @@ var md_nivel = require('../middlewares/nivel.js');
 api.get('/contacto/:id?', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id) {//Si existe id, seleccion todos los contactos de un cliente.
         var id_cliente = req.params.id;
-        con.query(`select
+        try {
+            con.query(`select
         a.*,
         b.nombre cliente
       from contactos a inner join (select id_cliente, nombre from clientes where id_cliente=${id_cliente}) b on a.id_cliente = b.id_cliente;`, function (err, rows) {
-                if (err) throw err
-                else res.send(rows);
-            });
+                    if (err) throw err
+                    else res.send(rows);
+                });
+        } catch (ex) {
+            res.redirect('/error');
+        }
         //Obtener información de todos los contactos.
     } else {
-        con.query(`select a.*,b.nombre cliente,b.id_cliente from contactos a inner join clientes b on a.id_cliente=b.id_cliente;`, function (error, rows) {
-            if (error) throw error
-            else res.send(rows);
-        });
+        try {
+            con.query(`select a.*,b.nombre cliente,b.id_cliente from contactos a inner join clientes b on a.id_cliente=b.id_cliente;`, function (error, rows) {
+                if (error) throw error
+                else res.send(rows);
+            });
+        } catch (ex) {
+            res.redirect('/error');
+        }
     }
 });
 
@@ -40,20 +48,28 @@ api.post('/contacto/:b', md_nivel.ensureLevel2, function (req, res) {
             //Actualizar Contacto
             if (b == 0) {
                 sql = `update contactos set nombre='${nombre}', telefono=${telefono},ext=${extension},correo=${correo},id_cliente=${id_cliente}, estado=${estado} where id_contacto=${id_contacto}`;
-                con.query(sql, function (err) {
-                    if (err) res.send({ message: 'Ocurrió un error', status: "500" });
-                    else
-                        res.status(200).send({ message: 'Contacto Editado Correctamente', status: "200" })
-                });
+                try {
+                    con.query(sql, function (err) {
+                        if (err) res.send({ message: 'Ocurrió un error', status: "500" });
+                        else
+                            res.status(200).send({ message: 'Contacto Editado Correctamente', status: "200" })
+                    });
+                } catch (ex) {
+                    res.redirect('/error');
+                }
             }
             //Insertar Contacto
             else if (b == 1) {
                 sql = `insert into contactos values(null,'${nombre}',${telefono},${extension},${correo},${id_cliente},${estado});`;
-                con.query(sql, function (err) {
-                    if (err) tres.send({ message: 'Ocurrió un error', status: "500" });
-                    else
-                        res.status(200).send({ message: 'Contacto Registrado Correctamente', status: "200" })
-                });
+                try {
+                    con.query(sql, function (err) {
+                        if (err) tres.send({ message: 'Ocurrió un error', status: "500" });
+                        else
+                            res.status(200).send({ message: 'Contacto Registrado Correctamente', status: "200" })
+                    });
+                } catch (ex) {
+                    res.redirect('/error');
+                }
             }
         } else {
             res.send({ message: 'Falta Proporcionar Datos Obligatorios', status: "500" });
@@ -66,11 +82,15 @@ api.post('/contacto/:b', md_nivel.ensureLevel2, function (req, res) {
 api.put('/contacto/:id', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
-        con.query(`update contactos set estado = 0 where id_contacto=${id}`, function (err) {
-            if (err) res.status(500).send({ message: 'Ocurrió un error', status: "500" })
-            else
-                res.status(200).send({ message: 'Contacto Eliminado correctamente', status: "200" })
-        });
+        try {
+            con.query(`update contactos set estado = 0 where id_contacto=${id}`, function (err) {
+                if (err) res.status(500).send({ message: 'Ocurrió un error', status: "500" })
+                else
+                    res.status(200).send({ message: 'Contacto Eliminado correctamente', status: "200" })
+            });
+        } catch (ex) {
+            res.redirect('/error');
+        }
 
     }
 });

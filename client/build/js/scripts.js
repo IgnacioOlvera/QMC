@@ -199,7 +199,7 @@ async function initRecibo() {
     });
 
     $('#in_cliente').on('change', async function () {//Evento del select de cliente
-        if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
+        if ($(this).val() == 5) {//Si el valor es 4, se muestra la tabla de tnet
             $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
             $('#tablaTNET').show('oculto');//muestra la tabla de tnet
         } else {
@@ -428,7 +428,7 @@ async function initEnvios() {
     });
 
     $('#in_cliente').on('change', async function () {
-        if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
+        if ($(this).val() == 5) {//Si el valor es 4, se muestra la tabla de tnet
             $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
             $('#tablaTNET').show('oculto');//muestra la tabla de tnet
         } else {
@@ -719,7 +719,7 @@ async function initPartes() {
             t.draw();
             bandera = !bandera;
         }
-        if ($(this).val() == 4) {//Si el valor es 4, se muestra la tabla de tnet
+        if ($(this).val() == 5) {//Si el valor es 4, se muestra la tabla de tnet
             $('#piezas').hide('oculto');//oculta la tabla de los clientes normales
             $('#tablaTNET').show('oculto');//muestra la tabla de tnet
         } else {

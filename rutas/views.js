@@ -4,7 +4,7 @@ var path = require("path");
 var md_auth = require('../middlewares/autenticacion.js');
 var md_nivel = require('../middlewares/nivel.js');
 
-api.get('/inicio', md_auth.ensureAuth,function (req, res) {
+api.get('/inicio', md_auth.ensureAuth, function (req, res) {
     res.sendFile(path.join(__dirname, '../client/production/index.html'));
 });
 api.get('/recibo', md_auth.ensureAuth, function (req, res) {
@@ -42,5 +42,8 @@ api.get('/svc', md_auth.ensureAuth, function (req, res) {
 });
 api.get('/usuarios', md_auth.ensureAuth, function (req, res) {
     res.sendFile(path.join(__dirname, '../client/production/usuarios.html'));
+});
+api.get('/error', function (req, res) {
+    res.sendfile(path.join(__dirname, '../client/production/page_500.html'))
 });
 module.exports = api;
