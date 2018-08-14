@@ -4,7 +4,7 @@ $('#logout').on('click', function () {
     window.location.replace("/login");
 });
 
-$("li").not(`[data-${localStorage.getItem("lvl")}]`).remove();
+$("li, th").not(`[data-${localStorage.getItem("lvl")}]`).remove();
 
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
@@ -883,18 +883,21 @@ async function initClientes() {
     });
 
 }
-var mov = $('#MovimientosInfo').DataTable({
-    "createdRow": function (row, data) {
-        let info = JSON.parse(data[0]);
-        $(row).attr({ "data-clasificacion": info.clasificacion, "data-id": info.movimiento });
-    }, "columnDefs": [
-        {
-            "targets": [0],
-            "visible": false
-        }
-    ],
-    "searching": false
-});
+var mov = document.getElementById('MovimientosInfo');
+if (mov != null) {
+    var mov = $('#MovimientosInfo').DataTable({
+        "createdRow": function (row, data) {
+            let info = JSON.parse(data[0]);
+            $(row).attr({ "data-clasificacion": info.clasificacion, "data-id": info.movimiento });
+        }, "columnDefs": [
+            {
+                "targets": [0],
+                "visible": false
+            }
+        ],
+        "searching": false
+    });
+}
 async function initMovimientos() {
 
     let url = "/movimientos"
@@ -1514,16 +1517,16 @@ function init_daterangepicker() {
         $("#reportrange span").html(moment().subtract(29, "days").format("DD/MMMM/YYYY") + " - " + moment().format("DD/MMMM/YYYY")),
             $("#reportrange").daterangepicker(b, a),
             $("#reportrange").on("show.daterangepicker", function () {
-                console.log("show event fired")
+
             }),
             $("#reportrange").on("hide.daterangepicker", function () {
-                console.log("hide event fired")
+
             }),
             $("#reportrange").on("apply.daterangepicker", async function (a, b) {
                 let fecha_inicio = b.startDate.format("DD/MM/YYYY");
                 let fecha_final = b.endDate.format("DD/MM/YYYY");
                 let data = {};
-                console.log("apply event fired, start/end dates are " + b.startDate.format("DD/MM/YYYY") + " to " + b.endDate.format("DD/MM/YYYY"));
+
                 if (fecha_inicio == fecha_final) {
                     data.fecha = b.startDate.format("DD/MM/YYYY")
 
@@ -1548,7 +1551,7 @@ function init_daterangepicker() {
 
             }),
             $("#reportrange").on("cancel.daterangepicker", function (a, b) {
-                console.log("cancel event fired")
+
             }),
             $("#options1").click(function () {
                 $("#reportrange").data("daterangepicker").setOptions(b, a)
