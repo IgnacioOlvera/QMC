@@ -6,7 +6,7 @@ var md_nivel = require('../middlewares/nivel.js');
 
 //Regresa historial de movimientos
 api.get('/movimientos', md_nivel.ensureLevel2, function (req, res) {
-    let sql = `select if (id_destino is null, 'I' ,'O') clas ,date_format(m.fecha,'%d/%m/%Y') fechaf,m.*, a.nombre almacen, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)destino, p.no_parte, p.descripcion from movimientos_almacenes m, almacenes a, partes p where m.id_almacen = a.id_almacen and m.no_parte = p.no_parte order by fecha;`;
+    let sql = `select if(id_destino is null, 'I', 'O')    class, date_format(m.fecha, '%d/%m/%Y')    fechaf, m.*, (select nombre from clientes where id_cliente = m.id_proveedor) proveedor, (select nombre from clientes where id_cliente = m.id_destino)   destino, p.no_parte, p.descripcion from movimientos_almacenes m, partes p where m.no_parte = p.no_parte order by fecha;`;
     try {
         con.query(sql, function (err, rows) {
             if (err) throw err
