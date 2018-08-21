@@ -469,7 +469,7 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
     }
     let inicio = 35;
     let peso_total = 0;
-    if (info.cliente[0].id_cliente == 4) {
+    if (info.cliente[0].id_cliente == 5) {
         ws.cell(24, 4, 32, 11, true).string([{
             bold: true,
             size: 11,
@@ -502,7 +502,7 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
             let tot_peso = (parte.peso * cant) / 1000;
             ws.cell(inicio, 1, inicio + 2, 2, true).string(`${tot_pallets} Plt`).style(estiloLista);
             ws.cell(inicio, 3, inicio + 2, 4, true).style(estiloLista);
-            ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.no_parte}-${parte.descripcion}\n${tot_cajas}@${cant_caja}`).style(estiloLista);
+            ws.cell(inicio, 5, inicio + 2, 12, true).string(`${parte.no_parte_ext}-${parte.descripcion}\n${tot_cajas}@${cant_caja}`).style(estiloLista);
             ws.cell(inicio, 13, inicio + 2, 15, true).string(`${tot_peso}`).style(estiloLista);
             ws.cell(inicio, 16, inicio + 2, 19, true).style(estiloLista);
             inicio += 3;
@@ -1154,7 +1154,7 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
     ws.cell(22, 21, 23, 23, true).string("REMARKS").style(styleEncanbezados);
     let inicio = 24;
     let cajas_total = 0;
-    if (info.cliente[0].id_cliente == 4) {
+    if (info.cliente[0].id_cliente == 5) {
         for (index in info.partes) {
             let parte = info.partes[index];
             ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
@@ -1180,7 +1180,7 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
             let tot_pallets = Math.floor(tot_cajas / cant_pallet);
             let precio = parte.precio * cant;
             ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
-            ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte}`).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).string(`${parte.no_parte_ext}`).style(styleLista);
             ws.cell(inicio, 7, inicio + 1, 7, true).string(`${tot_cajas}`).style(styleLista);
             ws.cell(inicio, 8, inicio + 1, 8, true).string(`${cant_caja}`).style(styleLista);
             ws.cell(inicio, 9, inicio + 1, 10, true).string(`${cant}`).style(styleLista);
@@ -1529,7 +1529,7 @@ api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
     let inicio = 24;
     let tot_peso = 0;
     let pallets_tot = 0;
-    if (info.cliente[0].id_cliente == 4) {
+    if (info.cliente[0].id_cliente == 5) {
         ws.cell(16, 18, 16, 21, true).string([{ size: 7.5 }, `P. HERMANN`]).style(bordeado);
         for (index in info.partes) {
             let parte = info.partes[index];
@@ -1559,7 +1559,7 @@ api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
             let tot_cajas = Math.floor(cant / cant_caja);
             let tot_pallets = Math.floor(tot_cajas / cant_pallet);
             ws.cell(inicio, 1, inicio + 1, 1, true).string(`${parseInt(index) + 1}`).style(styleLista);
-            ws.cell(inicio, 2, inicio + 1, 6, true).string(parte.no_parte).style(styleLista);
+            ws.cell(inicio, 2, inicio + 1, 6, true).string(parte.no_parte_ext).style(styleLista);
             ws.cell(inicio, 7, inicio + 1, 12, true).string(parte.descripcion).style(styleLista);
             ws.cell(inicio, 13, inicio + 1, 14, true).string(`${cant_caja}`).style(styleLista);
             ws.cell(inicio, 15, inicio + 1, 16, true).string(`${tot_cajas}`).style(styleLista);
@@ -1918,6 +1918,7 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
     let pallets_tot = 0;
     let cajas_tot = 0;
     for (index in info.partes) {
+
         let parte = info.partes[index];
         let cant_caja = parte.cant_x_caja;
         let cant_pallet = parte.cant_x_pallet || null;
@@ -1938,11 +1939,14 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
         inicio += 2;
         pallets_tot += tot_pallets;
         cajas_tot += tot_cajas;
+
     }
     //Fin de Cuerpo de Lista
     //Inicio de Relleno
     if (inicio != 69) {
         while (inicio <= 69) {
+
+
             ws.cell(inicio, 1, inicio + 1, 1, true).style(styleLista);
             ws.cell(inicio, 2, inicio + 1, 6, true).style(styleLista);
             ws.cell(inicio, 7, inicio + 1, 8, true).style(styleLista);
@@ -1953,6 +1957,7 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
             ws.cell(inicio, 17, inicio + 1, 18, true).style(styleLista);
             ws.cell(inicio, 19, inicio + 1, 19, true).style(styleLista);
             ws.cell(inicio, 20, inicio + 1, 21, true).style(styleLista);
+
             inicio += 2;
         }
     }
@@ -1960,7 +1965,7 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
     ws.cell(51, 2, 52, 6, true).string([{ size: 11 }, `Padlock: ${info.id_candado}`]).style(styleLista);
     ws.cell(53, 2, 54, 6, true).string([{ size: 11 }, `Invoice: ${info.factura}`]).style(styleLista);
     ws.cell(55, 2, 56, 6, true).string([{ size: 11 }, `Pedimento: ${info.pedimento}`]).style(styleLista);
-    if (info.cliente.id_cliente != 4) {
+    if (info.cliente.id_cliente != 5) {
         ws.cell(57, 9, 58, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Pallets`]).style(styleLista);
         ws.cell(59, 9, 60, 10, true).string([{ size: 11, bold: true, name: 'Verdana' }, `Total Box`]).style(styleLista);
         ws.cell(57, 11, 58, 12, true).string([{ size: 11, bold: true, name: 'Verdana' }, `${pallets_tot}`]).style(styleLista);
@@ -2005,7 +2010,7 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
 api.get('/ReleaseReceiving/:proyecto/:nombre', md_nivel.ensureLevel2, async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
-        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre,nota invoice, id_candado padlock, id_contendor conteiner from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 4 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
+        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre,nota invoice, id_candado padlock, id_contendor conteiner from (select * from movimientos_almacenes where id_destino is null and id_proveedor != 5 and year(fecha)=year(current_date())) ma join clientes c on ma.id_proveedor = c.id_cliente order by ma.fecha;`, function (err, rows) {
             if (err) return reject(err);
             else resolve(rows);
         });
@@ -2129,7 +2134,7 @@ api.get('/ReleaseReceiving/:proyecto/:nombre', md_nivel.ensureLevel2, async func
 api.get('/ReleaseShipments/:proyecto/:nombre', md_nivel.ensureLevel2, async function (req, res) {
     let info = null;
     info = await new Promise(function (resolve, reject) {
-        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select fecha, m.no_parte, cant_parte, id_destino from movimientos_almacenes m inner join partes p on m.no_parte = p.no_parte where id_destino is not null and p.id_proyecto=${req.params.proyecto} and m.id_proveedor != 4 and year(fecha) = year(current_date())) ma inner join clientes c on ma.id_destino = c.id_cliente order by ma.fecha;`, function (err, rows) {
+        con.query(`select week(ma.fecha)                                                    semana, date_format(ma.fecha, '%d/%m/%Y')                                 fecha, date_format(ma.fecha, '%T')                                       hora, concat('N', date_format(ma.fecha, '%y'), dayofyear(ma.fecha))     fechaJuliana, ma.no_parte, ma.cant_parte, concat('2623 ', date_format(ma.fecha, '%y'), dayofyear(ma.fecha)) RAN, c.nombre from (select fecha, m.no_parte, cant_parte, id_destino from movimientos_almacenes m inner join partes p on m.no_parte = p.no_parte where id_destino is not null and p.id_proyecto=${req.params.proyecto} and m.id_proveedor != 5 and year(fecha) = year(current_date())) ma inner join clientes c on ma.id_destino = c.id_cliente order by ma.fecha;`, function (err, rows) {
             if (err) return reject(err);
             else resolve(rows);
         });
@@ -2256,7 +2261,7 @@ api.get('/InventoryControl/:proyecto', md_nivel.ensureLevel2, async function (re
     let info = null;
     for (let i = 1; i <= fechaCreacion.getMonth() + 1; i++) {
         info = await new Promise(function (resolve, reject) {
-            con.query(`select p.no_parte, date_format(fecha, '%d/%m/%Y')                        fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet)  pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                          rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                          rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                          shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                          shp_qty, floor(cant_posterior / p.cant_x_caja / cant_x_pallet) end_case, ma.cant_posterior                                     end_qty, cq_ant, cq_post, svc_ant, svc_post from partes p left join movimientos_almacenes ma on ma.no_parte = p.no_parte where p.id_proveedor != 4 and month(fecha) = ${i} and p.id_proyecto = ${req.params.proyecto}          order by ma.no_parte, ma.id_movimiento;`, function (err, rows) {
+            con.query(`select p.no_parte, date_format(fecha, '%d/%m/%Y')                        fecha, floor(cant_anterior / p.cant_x_caja / cant_x_pallet)  pvr_case, cant_anterior, case when (id_destino is null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is not null) then 0 end                                          rcv_case, case when (id_destino is null) then cant_parte when (id_destino is not null) then 0 end                                          rcv_qty, case when (id_destino is not null) then floor(cant_parte / p.cant_x_caja / cant_x_pallet) when (id_destino is null) then 0 end                                          shp_case, case when (id_destino is not null) then cant_parte when (id_destino is null) then 0 end                                          shp_qty, floor(cant_posterior / p.cant_x_caja / cant_x_pallet) end_case, ma.cant_posterior                                     end_qty, cq_ant, cq_post, svc_ant, svc_post from partes p left join movimientos_almacenes ma on ma.no_parte = p.no_parte where p.id_proveedor != 5 and month(fecha) = ${i} and p.id_proyecto = ${req.params.proyecto}          order by ma.no_parte, ma.id_movimiento;`, function (err, rows) {
                 if (err) return reject(err);
                 else resolve(rows);
             });

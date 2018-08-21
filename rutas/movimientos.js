@@ -126,6 +126,7 @@ api.post('/entradas', md_nivel.ensureLevel2, function (req, res) {
                     try {
                         con.query(consulta, function (err) {
                             if (err) {
+                                throw err
                                 res.send({ message: `Ocurrió un error SQL`, status: "500" });
                             }
                             else {
@@ -142,10 +143,12 @@ api.post('/entradas', md_nivel.ensureLevel2, function (req, res) {
                     }
                 });
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,${parte},${cantidad},(select existencia from partes where no_parte=${parte}),(select existencia+${cantidad} from partes where no_parte=${parte}),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,'${nota}')`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},null,(select no_parte_ext from partes where no_parte=${parte}),${cantidad},(select existencia from partes where no_parte=${parte}),(select existencia+${cantidad} from partes where no_parte=${parte}),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,'${nota}')`;
                 try {
                     con.query(sql, function (err) {
                         if (err) {
+                            console.log(sql)
+                            throw err
                             res.status(500).send({ message: 'Ocurrió un error SQL', status: "500" });
                         }
                         else {
@@ -213,9 +216,12 @@ api.post('/salidas', md_nivel.ensureLevel2, function (req, res) {
                     }
                 }
             } else if (secuencia == null) {
-                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte=${parte}),(select existencia-${cantidad} from partes where no_parte=${parte}),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,'${nota}')`;
+                let sql = `insert into movimientos_almacenes values(null,1,${proveedor},${destino},${parte},${cantidad},(select existencia from partes where no_parte_ext=${parte}),(select existencia-${cantidad} from partes where no_parte_ext=${parte}),str_to_date('${fecha} ${cad}','%d/%m/%Y %H:%i:%s'),null,${contenedor},${candado},null,null,${nota})`;
                 con.query(sql, function (err) {
-                    if (err) res.send({ message: 'Ocurrió un error SQL', status: "500" });
+                    if (err) {
+                        console.log(sql);
+                        throw err
+                    }
                     else {
                         sql = `update partes set existencia=existencia-${cantidad} where no_parte=${parte}`;
                         try {

@@ -4,7 +4,7 @@ $('#logout').on('click', function () {
     window.location.replace("/login");
 });
 
-$("li, th").not(`[data-${localStorage.getItem("lvl")}]`).remove();
+// $("li ,th").not(`[data-${localStorage.getItem("lvl")}]`).remove();
 
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
@@ -168,10 +168,11 @@ async function initRecibo() {
 
     let count = 1;//Contador para los costales
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
-        "ordering": false, "searching": false
+        "ordering": false, "searching": false, "bPaginate": false
     });
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
-        "ordering": false, "searching": false
+        "ordering": false, "searching": false,
+        "bPaginate": false
     });
     let pet = await fetch("clienteNat/0", { headers: { authorization: getCookie("authorization") } });//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
@@ -209,7 +210,7 @@ async function initRecibo() {
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
-                (parte.estado == 0) ? t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="number" min="0" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw() : null;
+                (parte.estado == 0) ? t.row.add([parte.exterior, parte.interior, parte.descripcion, `<input type="number" min="0" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw() : null;
             });
             $('.cantidad').on('keyup', function () {//Evento del input de cantidad para los labels de tarimas y cajas
                 let cantidad = $(this).val();//Obtener cantidad del input
@@ -238,7 +239,7 @@ async function initRecibo() {
                 if (cantidades[rowIdx] > 0) {//Si la cantidad es mayor a 0
                     let a = $("#form1").serializeObject();//convertir los elementos del form en un objeto json.
                     let data = this.data();//data de la fila                
-                    a.id_parte = data[0];//obtener la primera celda la fila y setearlo en el objeto json del form
+                    a.id_parte = data[1];//obtener la primera celda la fila y setearlo en el objeto json del form
                     a.cant_parte = cantidades[rowIdx];////obtener la celda de cantidades de la fila y setearlo en el objeto json del form
                     a = JSON.stringify(a);//Convertir a cadena el json
                     let options = {//opciones para la petición
@@ -252,7 +253,7 @@ async function initRecibo() {
                     t.$('label').text('0');//regresar las cantidades a sus valores iniciales
                     if (res.status == 200) {
                         $.notify(res.message, "success");//mensaje del backend
-                        let p = await fetch(`/parte/${data[0]}`, { headers: { authorization: getCookie("authorization") } });
+                        let p = await fetch(`/parte/${data[1]}`, { headers: { authorization: getCookie("authorization") } });
                         let r = await p.json();
                         let part = r[0];
                         part.cant = cantidades[rowIdx];
@@ -370,7 +371,7 @@ async function initRecibo() {
             headers: { "Content-Type": "application/json", authorization: getCookie("authorization") }
         }
         let pet = await fetch(url, options);
-        let ROK = pet.json();
+        let ROK = await pet.json();
         if (ROK.status == 200) {
             $.notify(ROK.message, "success");
         } else {
@@ -387,10 +388,10 @@ async function initEnvios() {
     let fifoColorsTNET = ['C00000', 'FF0000', 'FFC000', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0'];//Colores FIFO de TNET
     let count = 1;
     let t = $('#piezasRecibo').DataTable({//Inicializar tabla de clientes.
-        "ordering": false, "searching": false
+        "ordering": false, "searching": false, "bPaginate": false
     });
     let tnet = $('#piezasTNET').DataTable({//Inicializar tabla de tnenet
-        "ordering": false, "searching": false
+        "ordering": false, "searching": false, "bPaginate": false
     });
 
     let pet = await fetch('/clienteNat/0', { headers: { authorization: getCookie("authorization") } });
@@ -438,7 +439,7 @@ async function initEnvios() {
             let partes = await pet.json();
             t.rows().remove().draw();//Quitar todos los elementos de la tabla.
             partes.forEach(parte => {//Agregar las filas con cada parte de cada proveedor a la tabla.
-                (parte.estado == 0) ? t.row.add([parte.interior, parte.exterior, parte.descripcion, `<input type="text" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw() : null;
+                (parte.estado == 0) ? t.row.add([parte.exterior, parte.interior, parte.descripcion, `<input type="text" data-validation="number" data-caja="${parte.caja}" data-pallet="${parte.pallet}" id="cant" name="cant_parte" class="form-control cantidad"/>`, `<label class="cajas">0</label>`, `<label class="pallets">0</label>`]).draw() : null;
             });
             $('.cantidad').on('keyup', function () {//Evento del input de cantidad para los labels de tarimas y cajas
                 let cantidad = $(this).val();//Obtener cantidad del input
@@ -498,11 +499,12 @@ async function initEnvios() {
                     if (destino != 0 || a.id_proveedor != 0) {
                         if (res.status == 200) {
                             $.notify(res.message, "success");//mensaje del backend
-                            let url = `/parte/${data[0]}`;
+                            let url = `/parte/${data[1]}`;
                             let p = await fetch(url, { headers: { authorization: getCookie("authorization") } });
                             let r = await p.json();
                             let part = {};
                             part.no_parte = r[0].no_parte;
+                            part.no_parte_ext = r[0].no_parte_ext;
                             part.cant = cantidades[rowIdx];
                             part.descripcion = r[0].descripcion;
                             part.cant_x_caja = r[0].cant_x_caja;
@@ -647,7 +649,7 @@ async function initPartes() {
         "ordering": false,
         "createdRow": function (row, data, index) {
             $('td', row).eq(4).css('background-color', "#" + fifoColorsTNET[data[4]]).html("");
-        }
+        }, "bPaginate": false,
     });
     let pet = await fetch('/clienteNat/0', { headers: { authorization: getCookie("authorization") } });
     let clientes = await pet.json();
@@ -714,7 +716,7 @@ async function initPartes() {
                 modales += `<div style="display:none" id="modal-${parte.interior}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">${parte.descripcion} - ${parte.interior}</h4> </div> <div class="modal-body"> <form id="Parte-${parte.interior}-Details" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.interior}" name="no_parte" id="in_no_parte-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> N° de Parte Exterior </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" value="${parte.exterior}" name="no_parte_ext" id="in_no_parte_ext-${parte.exterior}" class="form-control col-md-7 col-xs-12" placeholder="Ingresar Número de Parte Exterior En Caso de Existir" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Descripción <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="descripcion" value="${parte.descripcion}" id="in_decripcion-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Descripción" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Caja <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.caja}" name="cant_x_caja" id="in_cantxcaja-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Caja" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Pallet <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.pallet}" min="0" name="cant_x_pallet" id="in_cantxpallet-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad por Pallet" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Cantidad X Mínima <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" value="${parte.cant_min}" min="0" name="cant_min" id="in_cant_min-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Existencia <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" value="${parte.existencia}" name="existencia" id="in_existencia-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Cantidad Mínima" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Peso por Unidad <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="peso" value="${parte.peso}" id="in_peso-${parte.interior}" class="form-control col-md-7 col-xs-12" placeholder="Peso por Unidad" /></div></div><div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Precio por Unidad <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="number" min="0" name="precio" id="in_precio-${parte.interior}" value="${parte.precio}" class="form-control col-md-7 col-xs-12" placeholder="Precio por Unidad" /> </div> </div><div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Estado <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select class="form-control col-md-7 col-xs-12" name="estado" id="parte_estado-${parte.interior}"> <option value="${parte.estado}" selected>${(parte.estado == 1) ? 'Inactivo' : 'Activo'}</option> <option value="0">Activo</option> <option value="1">Inactivo</option> </select> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Proyecto <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <select name="id_proyecto" id="in_proyecto-${parte.interior}" class="form-control col-md-7 col-xs-12"><option value="${parte.id_proyecto}" selected>${parte.proyecto}</option> ${sproyectos}</select> </div> </div></div> </form></div> <div class="modal-footer"> <button type="button" data-target="${parte.interior}" data-parte="${parte.interior}" class="btn btn-primary actualizarParte">Guardar Cambios</button></div> </div> </div> </div>`;
                 let cajas = Math.floor(parte.existencia / parte.caja);
                 let tarimas = Math.floor(cajas / parte.pallet);
-                t.row.add([`{"proveedor":${parte.id_proveedor},"estado":${parte.estado}}`, parte.interior, parte.exterior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, parte.proyecto, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
+                t.row.add([`{"proveedor":${parte.id_proveedor},"estado":${parte.estado}}`, parte.exterior, parte.interior, parte.descripcion, parte.cant_min, parte.existencia, cajas, tarimas, parte.proyecto, `<button type="button" class="btn btn-primary editar" data-toggle="modal" title="Editar" data-parte=${parte.interior} data-target="#modal-${parte.interior}"><span class="fa fa-edit"></span></button><button data-target="${parte.interior}" type="button" title="Eliminar" class="btn btn-danger eliminar"><span class="fa fa-times"></span></button>`]).draw().node();
             });
             t.draw();
             bandera = !bandera;
@@ -806,7 +808,7 @@ async function initPartes() {
 }
 async function initClientes() {
     let TablaClientes = $('#ClientesInfo').DataTable({
-        "searching": false
+        "searching": false, "bPaginate": false
     });
     let url = "/cliente";
     let pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
@@ -895,7 +897,7 @@ if (mov != null) {
                 "visible": false
             }
         ],
-        "searching": false
+        "searching": false, "bPaginate": false,
     });
 }
 async function initMovimientos() {
@@ -953,7 +955,7 @@ async function initContactos() {
                 "targets": [0],
                 "visible": false
             }
-        ], "searching": false
+        ], "searching": false, "bPaginate": false
     });
     let url = "/contacto";
     let pet = await fetch(url, { headers: { authorization: getCookie("authorization") } });
@@ -1072,7 +1074,7 @@ async function initProyectos() {
                 "targets": [0],
                 "visible": false
             }
-        ], "ordering": false, "searching": false
+        ], "ordering": false, "searching": false, "bPaginate": false
     });
 
     let pet = await fetch('/clienteNat/0', { headers: { authorization: getCookie("authorization") } });
@@ -1181,7 +1183,7 @@ async function initQC() {
                 "visible": false
             }
         ],
-        "searching": false
+        "searching": false, "bPaginate": false
     });
     let pet = await fetch("clienteNat/0", { headers: { authorization: getCookie("authorization") } });//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
@@ -1251,7 +1253,7 @@ async function initSVC() {
                 "visible": false
             }
         ],
-        "searching": false
+        "searching": false, "bPaginate": false
     });
     let pet = await fetch("clienteNat/0", { headers: { authorization: getCookie("authorization") } });//petición para llenar combo de clientes proveedores
     let clientes = await pet.json();
