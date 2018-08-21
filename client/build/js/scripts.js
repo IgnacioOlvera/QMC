@@ -4,7 +4,7 @@ $('#logout').on('click', function () {
     window.location.replace("/login");
 });
 
-// $("li ,th").not(`[data-${localStorage.getItem("lvl")}]`).remove();
+$("li ,th").not(`[data-${localStorage.getItem("lvl")}]`).remove();
 
 async function initInicio() {
     let semanal = echarts.init(document.getElementById('semanal'));
