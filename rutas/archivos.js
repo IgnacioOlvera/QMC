@@ -17,7 +17,7 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
     let comienzo = new Date(fecha.getFullYear(), 0, 0);
     let dif = fecha - comienzo;
     let unDia = 1000 * 60 * 60 * 24;
-    let dia = Math.ceil(dif / unDia) - 1;
+    let dia = Math.ceil(dif / unDia);
     let wb = new xl.Workbook();
     let bordeadoNegritas = {
         font: {
@@ -442,7 +442,7 @@ api.post('/BillOfLanding', md_nivel.ensureLevel2, function (req, res) {
     let estiloLista = {
         font: {
             name: 'Arial',
-            size: 14
+            size: 13
         },
         alignment: {
             wrapText: true,
@@ -809,7 +809,7 @@ api.post('/OrderSheet', md_nivel.ensureLevel2, function (req, res) {
     let comienzo = new Date(fecha.getFullYear(), 0, 0);
     let dif = fecha - comienzo;
     let unDia = 1000 * 60 * 60 * 24;
-    let dia = Math.ceil(dif / unDia) - 1;
+    let dia = Math.ceil(dif / unDia);
     let wb = new xl.Workbook();
     //Estilos
     let styleLista = {
@@ -1268,7 +1268,7 @@ api.post('/PackingList', md_nivel.ensureLevel2, function (req, res) {
     let comienzo = new Date(fecha.getFullYear(), 0, 0);
     let dif = fecha - comienzo;
     let unDia = 1000 * 60 * 60 * 24;
-    let dia = Math.ceil(dif / unDia) - 1;
+    let dia = Math.ceil(dif / unDia);
     let wb = new xl.Workbook();
     //Estilos
     let styleLista = {
@@ -1662,7 +1662,7 @@ api.post('/Receiving', md_nivel.ensureLevel2, function (req, res) {
     let comienzo = new Date(fecha.getFullYear(), 0, 0);
     let dif = fecha - comienzo;
     let unDia = 1000 * 60 * 60 * 24;
-    let dia = Math.ceil(dif / unDia) - 1;
+    let dia = Math.ceil(dif / unDia);
     let wb = new xl.Workbook();
     //Estilos
     let styleLista = {
