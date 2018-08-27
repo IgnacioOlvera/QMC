@@ -2139,6 +2139,7 @@ api.get('/ReleaseShipments/:proyecto/:nombre', md_nivel.ensureLevel2, async func
             else resolve(rows);
         });
     });
+    (info.length == 0) ? res.send({ message: 'No se encontró información.' }) : null;
     let wb = new xl.Workbook({
         defaultFont: {
             size: 10,
