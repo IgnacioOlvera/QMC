@@ -2015,6 +2015,9 @@ api.get('/ReleaseReceiving/:proyecto/:nombre', md_nivel.ensureLevel2, async func
             else resolve(rows);
         });
     });
+    
+    (info.length == 0) ? res.send({ message: 'No se encontró información.', status: 500 }) : null;
+
     let wb = new xl.Workbook({
         defaultFont: {
             size: 10,
@@ -2139,7 +2142,7 @@ api.get('/ReleaseShipments/:proyecto/:nombre', md_nivel.ensureLevel2, async func
             else resolve(rows);
         });
     });
-    (info.length == 0) ? res.send({ message: 'No se encontró información.' }) : null;
+    (info.length == 0) ? res.send({ message: 'No se encontró información.', status: 500 }) : null;
     let wb = new xl.Workbook({
         defaultFont: {
             size: 10,
