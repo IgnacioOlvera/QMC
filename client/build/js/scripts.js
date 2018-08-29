@@ -1161,8 +1161,7 @@ async function initProyectos() {
             $.notify(res.message, "success");
             $.notify(r.message, "success");
         } else {
-            $.notify(res.message);
-            $.notify(r.message);
+            $.notify('Ocurrió un Error o no se encontraron Datos en ');
         }
     });
 
