@@ -67,8 +67,8 @@ async function initInicio() {
                 type: 'value',
                 name: 'Cantidad',
                 min: 0,
-                max: 25,
-                interval: 5
+                max: 15,
+                interval: 2
             }
         ],
         series: [
@@ -130,8 +130,8 @@ async function initInicio() {
                 type: 'value',
                 name: 'Cantidad',
                 min: 0,
-                max: 25,
-                interval: 5
+                max: 15,
+                interval: 2
             }
         ],
         series: [
@@ -1124,7 +1124,7 @@ async function initProyectos() {
         scliente += "</select>";
         modalesProyectos += `<div style="display:none" id="modal-proyecto-${proyecto.id_proyecto}" class="modal fade  in" tabindex="-1" role="dialog" aria-hidden="true" style="display: block; padding-right: 15px;"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">×</span> </button> <h4 class="modal-title" id="myModalLabel">Registro de Proyectos</h4> </div> <div class="modal-body"> <form id="editar-proyecto-${proyecto.id_proyecto}" class="form-horizontal form-label-left"> <div class="col-md-12"> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Proyecto <span class="required">*</span> </label> <div class="col-md-6 col-sm-6 col-xs-12"> <input type="text" name="proyecto" id="in_proyecto-${proyecto.id_proyecto}" value='${proyecto.nombre}' class="form-control col-md-7 col-xs-12" placeholder="Ingresar Nombre Proyecto" /> </div> </div> <div class="item form-group"> <label class="control-label col-md-3 col-sm-3 col-xs-12"> Propietario </label> <div class="col-md-6 col-sm-6 col-xs-12"> ${scliente} </div> </div> </div> </form> </div> <div class="modal-footer"> <button id="registroProyecto" data-modal="#modal-proyecto-${proyecto.id_proyecto}" data-pointer='${proyecto.id_proyecto}' data-target='#editar-proyecto-${proyecto.id_proyecto}' type="button" class="btn btn-primary editar">Editar </button> </div> </div> </div> </div>`;
 
-        tabla.row.add([`{"propietario":"${proyecto.id_cliente}"}`, proyecto.nombre, proyecto.propietario, `<button type="button" class="btn btn-primary editarc" data-toggle="modal" data-proyecto=${proyecto.id_proyecto} data-target="#modal-proyecto-${proyecto.id_proyecto}">Editar <span class="fa fa-edit"></span></button><button type="button" class="btn btn-warning reporte" data-nombre="${proyecto.nombre}" data-proyecto='${proyecto.id_proyecto}'>Generar Reporte</button>`]).draw();
+        tabla.row.add([`{"propietario":"${proyecto.id_cliente}"}`, proyecto.nombre, proyecto.propietario, `<button type="button" class="btn btn-primary editarc" data-toggle="modal" data-proyecto=${proyecto.id_proyecto} data-target="#modal-proyecto-${proyecto.id_proyecto}">Editar <span class="fa fa-edit"></span></button><button type="button" class="btn btn-warning reporte" data-nombre="${proyecto.nombre}" data-proyecto='${proyecto.id_proyecto}'>Generar Reporte</button><button type="button" class="btn btn-info inventario" data-nombre="${proyecto.nombre}" data-proyecto='${proyecto.id_proyecto}'>Generar Inventario</button>`]).draw();
     }
 
     $('#modals').html(modalesProyectos);
@@ -1162,6 +1162,17 @@ async function initProyectos() {
             $.notify(r.message, "success");
         } else {
             $.notify('Ocurrió un Error o no se encontraron Datos en ');
+        }
+    });
+
+    $('.inventario').on('click', async function () {
+        let pet = await fetch(`/InventoryControl/${$(this).data("proyecto")}`, { headers: { authorization: getCookie("authorization") } });
+        let res = await pet.json();
+        console.log(res);
+        if (res.status == 200) {
+            $.notify(`Inventario de ${$(this).data('nombre')} creado.`, 'success');
+        } else {
+            $.notify('Ocurrió un Error.')
         }
     });
 

@@ -19,7 +19,7 @@ api.get('/movimientos', md_nivel.ensureLevel2, function (req, res) {
 });
 api.get('/SemanalRepo', md_nivel.ensureLevel2, function (req, res) {
 
-    let sql = `select (select count(*) from movimientos_almacenes where id_destino is not null and week(fecha) = week(m.fecha))envios, (select count(*) from movimientos_almacenes where id_destino is null and week(fecha) = week(m.fecha)) recibos, date_format(fecha, '%d/%m/%Y') FechaMov, date_format(DATE_SUB(fecha, INTERVAL DAYOFWEEK(fecha) - 1 DAY), '%d/%m/%Y') inicio, date_format(DATE_ADD(fecha, INTERVAL 7 - DAYOFWEEK(fecha) DAY), '%d/%m/%Y') final from movimientos_almacenes m group by week(fecha);`;
+    let sql = `select ifnull((select count(cont) from (select count(*) cont, fecha from movimientos_almacenes where id_destino is not null group by date_format(fecha, '%d/%m/%Y')) base where week(m.fecha) = week(base.fecha) group by week(fecha)),0)                                               envios, ifnull( (select count(cont) from (select count(*) cont, fecha from movimientos_almacenes where id_destino is null group by date_format(fecha, '%d/%m/%Y')) base where week(m.fecha) = week(base.fecha) group by week(fecha)), 0)                                              recibos, date_format(DATE_SUB(fecha, INTERVAL DAYOFWEEK(fecha) - 1 DAY), '%d/%m/%Y') inicio, date_format(DATE_ADD(fecha, INTERVAL 7 - DAYOFWEEK(fecha) DAY), '%d/%m/%Y') final from movimientos_almacenes m group by week(fecha);`;
     try {
         con.query(sql, function (err, rows) {
             if (err) throw err
@@ -35,7 +35,7 @@ api.get('/MensualRepo', md_nivel.ensureLevel2, function (req, res) {
         con.query("SET lc_time_names = 'es_ES';", function (err) {
             if (err) throw err
             else {
-                let sql = `select (select count(*) from movimientos_almacenes where id_destino is not null and month(fecha) = month(m.fecha)) envios, (select count(*) from movimientos_almacenes where id_destino is null and month(fecha) = month(m.fecha))     recibos, MONTHNAME(fecha)                                                 mes from movimientos_almacenes m group by month(fecha);`
+                let sql = `select ifnull((select count(cont) from (select count(*) cont, fecha from movimientos_almacenes where id_destino is not null group by date_format(fecha, '%d/%m/%Y')) base where month(m.fecha) = month(base.fecha) group by month(fecha)), 0) envios, ifnull( (select count(cont) from (select count(*) cont, fecha from movimientos_almacenes where id_destino is null group by date_format(fecha, '%d/%m/%Y')) base where month(m.fecha) = month(base.fecha) group by month(fecha)), 0)    recibos, MONTHNAME(fecha)                  mes from movimientos_almacenes m group by month(fecha);`
                 con.query(sql, function (err, rows) {
                     if (err) throw err
                     else res.send(rows);

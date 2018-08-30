@@ -7,9 +7,9 @@ var mysql = require('mysql');
 //     timezone: 'utc'
 // });
 var con = mysql.createConnection({
-    host: "192.168.1.27",
+    host: "192.168.1.253",
     user: "logistica",
-    password: "Logistica03",
+    password: "logistica023",
     database: "qmc_mrp",
     timezone: 'utc'
 });
