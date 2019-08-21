@@ -14,6 +14,8 @@ var rutas_vistas = require('./rutas/views.js');
 var rutas_archivos = require('./rutas/archivos.js');
 var rutas_proyectos = require('./rutas/proyectos.js');
 var rutas_usuarios = require('./rutas/usuarios.js');
+var rutas_android = require('./rutas/api-android.js');
+
 
 var app = express();
 app.use(cookieParser());
@@ -55,5 +57,6 @@ app.use(rutas_vistas);
 app.use(rutas_archivos);
 app.use(rutas_proyectos);
 app.use(rutas_usuarios);
+app.use(rutas_android);
 
 module.exports = app;

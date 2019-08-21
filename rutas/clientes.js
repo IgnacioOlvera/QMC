@@ -117,10 +117,10 @@ api.delete('/cliente/:id', md_nivel.ensureLevel2, function (req, res) {
     if (req.params.id != null) {
         let id = req.params.id
         try {
-            con.query(`delete from clientes where id_cliente=${id}`, function (err) {
+            con.query(`update clientes set estado='INACTIVO' where id_cliente=${id}`, function (err) {
                 if (err) throw err
                 else
-                    res.status(200).send({ message: 'Parte eliminada correctamente', status: "200" })
+                    res.status(200).send({ message: 'Cliente eliminada correctamente', status: "200" })
             });
         }
         catch (ex) {
